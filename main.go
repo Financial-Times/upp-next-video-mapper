@@ -92,7 +92,7 @@ func main() {
 		}
 
 		handler := video.NewVideoMapperHandler(producerConfig)
-		messageConsumer := consumer.NewConsumer(consumerConfig, handler.OnMessage, http.Client{})
+		messageConsumer := consumer.NewConsumer(consumerConfig, handler.OnMessage, &http.Client{})
 		InfoLogger.Println(prettyPrintConfig(consumerConfig, producerConfig))
 
 		hc := &video.Healthcheck{Client: http.Client{}, ConsumerConf: consumerConfig}
@@ -107,7 +107,7 @@ func main() {
 	}
 }
 
-func consumeUntilSigterm(messageConsumer consumer.Consumer) {
+func consumeUntilSigterm(messageConsumer consumer.MessageConsumer) {
 	InfoLogger.Printf("Starting queue consumer: %#v", messageConsumer)
 	var consumerWaitGroup sync.WaitGroup
 	consumerWaitGroup.Add(1)

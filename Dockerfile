@@ -1,19 +1,21 @@
-FROM alpine:3.3
+FROM alpine:3.4
 
-ADD *.go /next-video-mapper/
+ARG PROJECT=next-video-mapper
+
+COPY . /${PROJECT}/
 
 RUN apk add --update bash \
   && apk --update add git bzr \
   && apk --update add go \
   && export GOPATH=/gopath \
-  && REPO_PATH="github.com/Financial-Times/next-video-mapper" \
-  && mkdir -p $GOPATH/src/${REPO_PATH} \
-  && mv next-video-mapper/* $GOPATH/src/${REPO_PATH} \
-  && cd $GOPATH/src/${REPO_PATH} \
+  && REPO_ROOT="github.com/Financial-Times/" \
+  && mkdir -p $GOPATH/src/${REPO_ROOT}/ \
+  && mv ${PROJECT} $GOPATH/src/${REPO_ROOT} \
+  && cd $GOPATH/src/${REPO_ROOT}/${PROJECT} \
   && go get -t ./... \
   && go build \
-  && mv next-video-mapper /next-video-mapper-app \
+  && mv ${PROJECT} / \
   && apk del go git bzr \
   && rm -rf $GOPATH /var/cache/apk/*
 
-CMD [ "/next-video-mapper-app" ]
+CMD [ "/next-video-mapper" ]
