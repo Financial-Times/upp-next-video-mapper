@@ -34,7 +34,7 @@ func (v VideoMapperHandler) Listen(hc *Healthcheck) {
 	r.HandleFunc("/__gtg", hc.gtg).Methods("GET")
 
 	http.Handle("/", r)
-	port := 8081 //hardcoded for now
+	port := 8080 //hardcoded for now
 	InfoLogger.Printf("Starting to listen on port [%d]", port)
 	err := http.ListenAndServe(":"+strconv.Itoa(port), nil)
 	if err != nil {
