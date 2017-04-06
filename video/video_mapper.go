@@ -59,6 +59,7 @@ func (v VideoMapper) mapVideoContent(m consumer.Message, tid string, lastModifie
 		return nil, "", err
 	}
 
+	contentURI := videoContentURIBase + uuid
 	isPublishEvent, err := isPublishEvent(videoContent)
 	if err != nil {
 		return nil, uuid, err
@@ -66,16 +67,17 @@ func (v VideoMapper) mapVideoContent(m consumer.Message, tid string, lastModifie
 
 	//it's an unpublish event
 	if !isPublishEvent {
-		return mapUnpublishEvent(uuid)
+		videoModel := &videoPayload{}
+		marshalledPubEvent, err := buildAndMarshalPublicationEvent(videoModel, contentURI, lastModified, tid)
+		return marshalledPubEvent, uuid, err
 	}
 
-	contentURI := videoContentURIBase + uuid
 	videoModel, err := getVideoModel(videoContent, uuid, tid)
 	if err != nil {
 		return nil, uuid, err
 	}
 
-	marshalledPubEvent, err := buildAndMarshalPublicationEvent(videoModel, contentURI, publishedDate, tid)
+	marshalledPubEvent, err := buildAndMarshalPublicationEvent(videoModel, contentURI, lastModified, tid)
 	return marshalledPubEvent, uuid, err
 }
 

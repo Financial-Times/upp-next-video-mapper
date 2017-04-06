@@ -2,7 +2,7 @@ package video
 
 type publicationEvent struct {
 	ContentURI   string        `json:"contentUri"`
-	Payload      *videoPayload `json:"payload,omitempty"`
+	Payload      *videoPayload `json:"payload"`
 	LastModified string        `json:"lastModified"`
 }
 
@@ -16,21 +16,21 @@ type brand struct {
 }
 
 type videoPayload struct {
-	Id                 string       `json:"uuid"`
+	Id                 string       `json:"uuid,omitempty"`
 	Title              string       `json:"title,omitempty"`
 	Standfirst         string       `json:"standfirst,omitempty"`
 	Description        string       `json:"description,omitempty"`
 	Byline             string       `json:"byline,omitempty"`
-	Identifiers        []identifier `json:"identifiers"`
-	Brands             []brand      `json:"brands"`
-	FirstPublishedDate string       `json:"firstPublishedDate"`
-	PublishedDate      string       `json:"publishedDate"`
+	Identifiers        []identifier `json:"identifiers,omitempty"`
+	Brands             []brand      `json:"brands,omitempty"`
+	FirstPublishedDate string       `json:"firstPublishedDate,omitempty"`
+	PublishedDate      string       `json:"publishedDate,omitempty"`
 	MainImage          string       `json:"image,omitempty"`
 	Transcript         string       `json:"transcript,omitempty"`
 	Captions           []caption    `json:"captions,omitempty"`
 	DataSources        []dataSource `json:"dataSource,omitempty"`
-	CanBeDistributed   string       `json:"canBeDistributed"`
-	Type               string       `json:"type"`
+	CanBeDistributed   string       `json:"canBeDistributed,omitempty"`
+	Type               string       `json:"type,omitempty"`
 }
 
 type caption struct {
