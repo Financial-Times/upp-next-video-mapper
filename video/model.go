@@ -25,7 +25,7 @@ type videoPayload struct {
 	Brands             []brand      `json:"brands,omitempty"`
 	FirstPublishedDate string       `json:"firstPublishedDate,omitempty"`
 	PublishedDate      string       `json:"publishedDate,omitempty"`
-	MainImage          string       `json:"image,omitempty"`
+	MainImage          string       `json:"mainImage,omitempty"`
 	Transcript         string       `json:"transcript,omitempty"`
 	Captions           []caption    `json:"captions,omitempty"`
 	DataSources        []dataSource `json:"dataSource,omitempty"`

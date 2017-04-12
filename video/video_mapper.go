@@ -4,18 +4,21 @@ import (
 	"bytes"
 	"encoding/json"
 	"encoding/xml"
-	"errors"
 	"fmt"
+	"github.com/Financial-Times/message-queue-go-producer/producer"
 	"github.com/Financial-Times/message-queue-gonsumer/consumer"
 	. "github.com/Financial-Times/next-video-mapper/logger"
+	uuid "github.com/satori/go.uuid"
 	"io"
 	"regexp"
 	"strings"
+	"time"
 )
 
 const videoContentURIBase = "http://next-video-mapper.svc.ft.com/video/model/"
 const videoAuthority = "http://api.ft.com/system/NEXT-VIDEO-EDITOR"
 const ftBrandID = "http://api.ft.com/things/dbb0bdae-1f0c-11e4-b0cb-b2227cce2b54"
+const dateFormat = "2006-01-02T03:04:05.000Z0700"
 
 const publishedDate = "updatedAt"
 const canBeDistributedYes = "yes"
@@ -28,61 +31,44 @@ var (
 type VideoMapper struct {
 }
 
-func (v VideoMapper) TransformMsg(m consumer.Message) (marshalledEvent []byte, uuid string, err error) {
+func (v VideoMapper) TransformMsg(m consumer.Message) (msg producer.Message, uuid string, err error) {
 	tid := m.Headers["X-Request-Id"]
 	if tid == "" {
-		return nil, "", errors.New("X-Request-Id not found in kafka message headers. Skipping message")
+		return producer.Message{}, "", fmt.Errorf("X-Request-Id not found in kafka message headers. Skipping message")
 	}
 
 	lastModified := m.Headers["Message-Timestamp"]
 	if lastModified == "" {
-		return nil, "", errors.New("Message-Timestamp not found in kafka message headers. Skipping message")
+		lastModified = time.Now().Format(dateFormat)
 	}
 
-	marshalledEvent, uuid, err = v.mapVideoContent(m, tid, lastModified)
-	if err != nil {
-		WarnLogger.Printf("%v - Mapping error: [%v]", tid, err.Error())
-		return nil, "", err
-	}
-	return marshalledEvent, uuid, nil
-}
-
-func (v VideoMapper) mapVideoContent(m consumer.Message, tid string, lastModified string) ([]byte, string, error) {
 	var videoContent map[string]interface{}
-
 	if err := json.Unmarshal([]byte(m.Body), &videoContent); err != nil {
-		return nil, "", fmt.Errorf("Video JSON couldn't be unmarshalled. Skipping invalid JSON: %v", m.Body)
+		return producer.Message{}, "", fmt.Errorf("Video JSON couldn't be unmarshalled. Skipping invalid JSON: %v", m.Body)
 	}
 
-	uuid, err := get("id", videoContent)
+	uuid, err = get("id", videoContent)
 	if err != nil {
-		return nil, "", err
+		return producer.Message{}, "", fmt.Errorf("Could not extract UUID from video message. Skipping invalid JSON: %v", m.Body)
 	}
 
 	contentURI := videoContentURIBase + uuid
-	isPublishEvent, err := isPublishEvent(videoContent)
-	if err != nil {
-		return nil, uuid, err
-	}
+	isPublishEvent := isPublishEvent(videoContent)
 
 	//it's an unpublish event
 	if !isPublishEvent {
 		videoModel := &videoPayload{}
-		marshalledPubEvent, err := buildAndMarshalPublicationEvent(videoModel, contentURI, lastModified, tid)
-		return marshalledPubEvent, uuid, err
+		deleteVideoMsg, err := buildAndMarshalPublicationEvent(videoModel, contentURI, lastModified, tid)
+		return deleteVideoMsg, uuid, err
 	}
 
 	videoModel, err := getVideoModel(videoContent, uuid, tid)
 	if err != nil {
-		return nil, uuid, err
+		return producer.Message{}, uuid, err
 	}
 
-	marshalledPubEvent, err := buildAndMarshalPublicationEvent(videoModel, contentURI, lastModified, tid)
-	return marshalledPubEvent, uuid, err
-}
-
-func mapUnpublishEvent(uuid string) ([]byte, string, error) {
-	return nil, uuid, nil
+	videoMsg, err := buildAndMarshalPublicationEvent(videoModel, contentURI, lastModified, tid)
+	return videoMsg, uuid, err
 }
 
 func getVideoModel(videoContent map[string]interface{}, uuid string, tid string) (*videoPayload, error) {
@@ -90,25 +76,24 @@ func getVideoModel(videoContent map[string]interface{}, uuid string, tid string)
 	standfirst, _ := get("standfirst", videoContent)
 	description, _ := get("description", videoContent)
 	byline, _ := get("byline", videoContent)
-	firstPublishDate, _ := get("createdAt", videoContent)
-
-	publishedDate, err := getPublishedDate(videoContent)
-	if err != nil {
-		WarnLogger.Println(err)
-	}
+	firstPublishDate, _ := get("firstPublishedAt", videoContent)
+	publishedDate, _ := get("publishedAt", videoContent)
 
 	mainImage, err := getMainImage(videoContent, tid, uuid)
 	if err != nil {
-		WarnLogger.Println(err)
+		WarnLogger.Println(fmt.Errorf("%v - Extract main image: %v", tid, err))
 	}
 
-	transcriptionMap, transcript, err := getTranscript(videoContent, tid, uuid)
+	transcriptionMap, transcript, err := getTranscript(videoContent, uuid)
 	if err != nil {
-		WarnLogger.Println(err)
+		WarnLogger.Println(fmt.Errorf("%v - %v", tid, err))
 	}
 
 	captionsList := getCaptions(transcriptionMap)
-	dataSources := getDataSources(videoContent["encoding"], tid)
+	dataSources, err := getDataSources(videoContent["encoding"])
+	if err != nil {
+		WarnLogger.Println(fmt.Errorf("%v - %v", tid, err))
+	}
 
 	i := identifier{
 		Authority:       videoAuthority,
@@ -140,19 +125,6 @@ func getVideoModel(videoContent map[string]interface{}, uuid string, tid string)
 	return videoModel, nil
 }
 
-func getPublishedDate(video map[string]interface{}) (string, error) {
-	updatedAt, err1 := get("updatedAt", video)
-	if err1 == nil {
-		return updatedAt, nil
-	}
-	createdAt, err2 := get("createdAt", video)
-	if err2 == nil {
-		return createdAt, nil
-	}
-
-	return "", fmt.Errorf("No valid value could be found for publishedDate: [%v] [%v]", err1, err2)
-}
-
 func getMainImage(videoContent map[string]interface{}, tid string, uuid string) (string, error) {
 	imageURI, err := get("image", videoContent)
 	if err != nil {
@@ -160,7 +132,6 @@ func getMainImage(videoContent map[string]interface{}, tid string, uuid string) 
 	}
 
 	imageUuidString, err := getUUIDFromURI(imageURI)
-	WarnLogger.Printf("Image uuid: %v", imageUuidString)
 	if err != nil {
 		return "", err
 	}
@@ -178,15 +149,15 @@ func getMainImage(videoContent map[string]interface{}, tid string, uuid string) 
 	return mainImageSetUuid.String(), nil
 }
 
-func getTranscript(videoContent map[string]interface{}, tid string, uuid string) (map[string]interface{}, string, error) {
+func getTranscript(videoContent map[string]interface{}, uuid string) (map[string]interface{}, string, error) {
 	transcription, ok := videoContent["transcription"]
 	if !ok {
-		return nil, "", fmt.Errorf("%v - Transcription is null and will be skipped for uuid: %v", tid, uuid)
+		return nil, "", fmt.Errorf("Transcription is null and will be skipped for uuid: %v", uuid)
 	}
 
 	transcriptionMap, ok := transcription.(map[string]interface{})
 	if !ok {
-		return nil, "", fmt.Errorf("%v - Transcription is null and will be skipped for uuid: %v", tid, uuid)
+		return nil, "", fmt.Errorf("%v - Transcription is null and will be skipped for uuid: %v", uuid)
 	}
 
 	transcript, err := get("transcript", transcriptionMap)
@@ -196,7 +167,7 @@ func getTranscript(videoContent map[string]interface{}, tid string, uuid string)
 
 	valid := isValidXHTML(transcript)
 	if !valid {
-		return transcriptionMap, "", fmt.Errorf("%v - Transcription has invalid HTML body and will be skipped for uuid: %v", tid, uuid)
+		return transcriptionMap, "", fmt.Errorf("Transcription has invalid HTML body and will be skipped for uuid: %v", uuid)
 	}
 
 	return transcriptionMap, transcript, nil
@@ -224,16 +195,15 @@ func getCaptions(transcriptionMap map[string]interface{}) []caption {
 	return cList
 }
 
-func getDataSources(encoding interface{}, tid string) []dataSource {
+func getDataSources(encoding interface{}) ([]dataSource, error) {
 	encodingMap, ok := encoding.(map[string]interface{})
 	if !ok {
-		InfoLogger.Printf("%v - encoding field of video JSON is null, dataSource will be empty.", tid)
+		return nil, fmt.Errorf("Encodings field of video JSON is null, dataSource will be empty.")
 	}
 
 	outputs, ok := encodingMap["outputs"]
 	if !ok {
-		InfoLogger.Printf("%v - outputs field of video JSON is null, dataSource will be empty.", tid)
-		return nil
+		return nil, fmt.Errorf("Outputs field of video JSON is null, dataSource will be empty.")
 	}
 
 	outputsArray := outputs.([]interface{})
@@ -241,7 +211,7 @@ func getDataSources(encoding interface{}, tid string) []dataSource {
 	for _, elem := range outputsArray {
 		elemMap, okMap := elem.(map[string]interface{})
 		if !okMap {
-			InfoLogger.Printf("%v - cannot extract output field of video JSON, dataSource will be empty.", tid)
+			return nil, fmt.Errorf("Cannot extract output field of video JSON, dataSource will be empty.")
 		}
 		binaryUrl, _ := get("url", elemMap)
 		pWidth, _ := getNumber("width", elemMap)
@@ -264,10 +234,10 @@ func getDataSources(encoding interface{}, tid string) []dataSource {
 		dataSourcesList = append(dataSourcesList, d)
 	}
 
-	return dataSourcesList
+	return dataSourcesList, nil
 }
 
-func buildAndMarshalPublicationEvent(p *videoPayload, contentURI, lastModified, pubRef string) (_ []byte, err error) {
+func buildAndMarshalPublicationEvent(p *videoPayload, contentURI, lastModified, pubRef string) (producer.Message, error) {
 	e := publicationEvent{
 		ContentURI:   contentURI,
 		Payload:      p,
@@ -277,22 +247,28 @@ func buildAndMarshalPublicationEvent(p *videoPayload, contentURI, lastModified, 
 	marshalledEvent, err := unsafeJSONMarshal(e)
 	if err != nil {
 		WarnLogger.Printf("%v - Couldn't marshall event %v, skipping message.", pubRef, e)
-		return nil, err
+		return producer.Message{}, err
 	}
 
-	return marshalledEvent, nil
+	headers := map[string]string{
+		"X-Request-Id":      pubRef,
+		"Message-Timestamp": lastModified,
+		"Message-Id":        uuid.NewV4().String(),
+		"Message-Type":      "cms-content-published",
+		"Content-Type":      "application/json",
+		"Origin-System-Id":  videoSystemOrigin,
+	}
+	return producer.Message{Headers: headers, Body: string(marshalledEvent)}, nil
 }
 
-func isPublishEvent(video map[string]interface{}) (bool, error) {
-	_, err := getPublishedDate(video)
-	if err == nil {
-		return true, nil
+func isPublishEvent(video map[string]interface{}) bool {
+	if isDeleted, present := video["deleted"]; present {
+		dFlag, ok := isDeleted.(bool)
+		if ok && dFlag {
+			return false
+		}
 	}
-	if _, present := video["deleted"]; present {
-		//it's an unpublish event
-		return false, nil
-	}
-	return false, fmt.Errorf("Could not detect event type for video: [%#v]", video)
+	return true
 }
 
 func getUUIDFromURI(uri string) (string, error) {

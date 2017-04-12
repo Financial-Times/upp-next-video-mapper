@@ -66,6 +66,13 @@ func main() {
 		EnvVar: "Q_AUTHORIZATION",
 	})
 
+	port := app.Int(cli.IntOpt{
+		Name:   "port",
+		Value:  8080,
+		Desc:   "application port",
+		EnvVar: "PORT",
+	})
+
 	app.Action = func() {
 		InitLogs(os.Stdout, os.Stdout, os.Stderr)
 
@@ -97,7 +104,7 @@ func main() {
 
 		hc := &video.Healthcheck{Client: http.Client{}, ConsumerConf: consumerConfig}
 
-		go handler.Listen(hc)
+		go handler.Listen(hc, *port)
 		consumeUntilSigterm(messageConsumer)
 	}
 

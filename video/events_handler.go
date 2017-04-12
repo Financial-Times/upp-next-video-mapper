@@ -4,16 +4,14 @@ import (
 	"github.com/Financial-Times/message-queue-go-producer/producer"
 	"github.com/Financial-Times/message-queue-gonsumer/consumer"
 	. "github.com/Financial-Times/next-video-mapper/logger"
+	tid "github.com/Financial-Times/transactionid-utils-go"
 	"github.com/gorilla/mux"
-	"github.com/satori/go.uuid"
 	"io/ioutil"
 	"net/http"
 	"strconv"
-	"time"
 )
 
 const videoSystemOrigin = "http://cmdb.ft.com/systems/next-video-editor"
-const dateFormat = "2006-01-02T03:04:05.000Z0700"
 
 type VideoMapperHandler struct {
 	messageProducer *producer.MessageProducer
@@ -27,14 +25,13 @@ func NewVideoMapperHandler(producerConfig producer.MessageProducerConfig) VideoM
 	return VideoMapperHandler{&messageProducer, videoMapper}
 }
 
-func (v VideoMapperHandler) Listen(hc *Healthcheck) {
+func (v VideoMapperHandler) Listen(hc *Healthcheck, port int) {
 	r := mux.NewRouter()
 	r.HandleFunc("/map", v.MapHandler).Methods("POST")
 	r.HandleFunc("/__health", hc.Healthcheck()).Methods("GET")
 	r.HandleFunc("/__gtg", hc.gtg).Methods("GET")
 
 	http.Handle("/", r)
-	port := 8080 //hardcoded for now
 	InfoLogger.Printf("Starting to listen on port [%d]", port)
 	err := http.ListenAndServe(":"+strconv.Itoa(port), nil)
 	if err != nil {
@@ -43,55 +40,55 @@ func (v VideoMapperHandler) Listen(hc *Healthcheck) {
 }
 
 func (v VideoMapperHandler) OnMessage(m consumer.Message) {
-	tid := m.Headers["X-Request-Id"]
+	transactionID := m.Headers["X-Request-Id"]
 	if m.Headers["Origin-System-Id"] != videoSystemOrigin {
-		InfoLogger.Printf("%v - Ignoring message with different Origin-System-Id %v", tid, m.Headers["Origin-System-Id"])
+		InfoLogger.Printf("%v - Ignoring message with different Origin-System-Id %v", transactionID, m.Headers["Origin-System-Id"])
 		return
 	}
 
-	marshalledEvent, contentUUID, err := v.videoMapper.TransformMsg(m)
+	videoMsg, contentUUID, err := v.videoMapper.TransformMsg(m)
 	if err != nil {
-		WarnLogger.Printf("%v - Error error consuming message: %v", tid, err)
+		WarnLogger.Printf("%v - Error consuming message: %v", transactionID, err)
 		return
 	}
-	headers := createHeader(tid)
-	err = (*v.messageProducer).SendMessage("", producer.Message{Headers: headers, Body: string(marshalledEvent)})
+	err = (*v.messageProducer).SendMessage("", videoMsg)
 	if err != nil {
-		WarnLogger.Printf("%v - Error sending transformed message to queue: %v", tid, err)
+		WarnLogger.Printf("%v - Error sending transformed message to queue: %v", transactionID, err)
 	}
-	InfoLogger.Printf("%v - Mapped and sent for uuid: %v", tid, contentUUID)
+	InfoLogger.Printf("%v - Mapped and sent for uuid: %v", transactionID, contentUUID)
 }
 
 func (v VideoMapperHandler) MapHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	transactionID := tid.GetTransactionIDFromRequest(r)
+	InfoLogger.Printf("%v - Received transformation request", transactionID)
+
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		writerBadRequest(w, err)
 	}
-	tid := r.Header.Get("X-Request-Id")
-	m := consumer.Message{
-		Body:    string(body),
-		Headers: createHeader(tid),
-	}
-	
-	mappedVideoBytes, _, err := v.videoMapper.TransformMsg(m)
+
+	m := createMessageFromRequest(transactionID, body, r)
+	videoMsg, _, err := v.videoMapper.TransformMsg(m)
 	if err != nil {
 		writerBadRequest(w, err)
 	}
-	_, err = w.Write(mappedVideoBytes)
+
+	w.Header().Add("Content-Type", "application/json")
+	_, err = w.Write([]byte(videoMsg.Body))
+
 	if err != nil {
-		WarnLogger.Printf("%v - Writing response error: [%v]", tid, err)
+		WarnLogger.Printf("%v - Writing response error: [%v]", transactionID, err)
 	}
 }
 
-func createHeader(tid string) map[string]string {
-	return map[string]string{
-		"X-Request-Id":      tid,
-		"Message-Timestamp": time.Now().Format(dateFormat),
-		"Message-Id":        uuid.NewV4().String(),
-		"Message-Type":      "cms-content-published",
-		"Content-Type":      "application/json",
-		"Origin-System-Id":  "http://cmdb.ft.com/systems/brightcove",
+func createMessageFromRequest(tid string, body []byte, r *http.Request) consumer.Message {
+	return consumer.Message{
+		Body: string(body),
+		Headers: map[string]string{
+			"Content-Type":      "application/json",
+			"X-Request-Id":      tid,
+			"Message-Timestamp": r.Header.Get("Message-Timestamp"),
+		},
 	}
 }
 
