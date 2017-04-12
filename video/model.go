@@ -31,6 +31,7 @@ type videoPayload struct {
 	DataSources        []dataSource `json:"dataSource,omitempty"`
 	CanBeDistributed   string       `json:"canBeDistributed,omitempty"`
 	Type               string       `json:"type,omitempty"`
+	LastModified       string       `json:"lastModified,omitempty"`
 }
 
 type caption struct {

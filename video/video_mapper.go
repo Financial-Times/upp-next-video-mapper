@@ -62,7 +62,7 @@ func (v VideoMapper) TransformMsg(m consumer.Message) (msg producer.Message, uui
 		return deleteVideoMsg, uuid, err
 	}
 
-	videoModel, err := getVideoModel(videoContent, uuid, tid)
+	videoModel, err := getVideoModel(videoContent, uuid, tid, lastModified)
 	if err != nil {
 		return producer.Message{}, uuid, err
 	}
@@ -71,7 +71,7 @@ func (v VideoMapper) TransformMsg(m consumer.Message) (msg producer.Message, uui
 	return videoMsg, uuid, err
 }
 
-func getVideoModel(videoContent map[string]interface{}, uuid string, tid string) (*videoPayload, error) {
+func getVideoModel(videoContent map[string]interface{}, uuid string, tid string, lastModified string) (*videoPayload, error) {
 	title, _ := get("title", videoContent)
 	standfirst, _ := get("standfirst", videoContent)
 	description, _ := get("description", videoContent)
@@ -120,6 +120,7 @@ func getVideoModel(videoContent map[string]interface{}, uuid string, tid string)
 		DataSources:        dataSources,
 		CanBeDistributed:   canBeDistributedYes,
 		Type:               videoType,
+		LastModified:       lastModified,
 	}
 
 	return videoModel, nil
