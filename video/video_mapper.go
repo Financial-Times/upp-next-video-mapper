@@ -62,16 +62,12 @@ func (v VideoMapper) TransformMsg(m consumer.Message) (msg producer.Message, uui
 		return deleteVideoMsg, uuid, err
 	}
 
-	videoModel, err := getVideoModel(videoContent, uuid, tid, lastModified)
-	if err != nil {
-		return producer.Message{}, uuid, err
-	}
-
+	videoModel := getVideoModel(videoContent, uuid, tid, lastModified)
 	videoMsg, err := buildAndMarshalPublicationEvent(videoModel, contentURI, lastModified, tid)
 	return videoMsg, uuid, err
 }
 
-func getVideoModel(videoContent map[string]interface{}, uuid string, tid string, lastModified string) (*videoPayload, error) {
+func getVideoModel(videoContent map[string]interface{}, uuid string, tid string, lastModified string) *videoPayload {
 	title, _ := get("title", videoContent)
 	standfirst, _ := get("standfirst", videoContent)
 	description, _ := get("description", videoContent)
@@ -104,7 +100,7 @@ func getVideoModel(videoContent map[string]interface{}, uuid string, tid string,
 		ID: ftBrandID,
 	}
 
-	videoModel := &videoPayload{
+	return &videoPayload{
 		Id:                 uuid,
 		Title:              title,
 		Standfirst:         standfirst,
@@ -122,8 +118,6 @@ func getVideoModel(videoContent map[string]interface{}, uuid string, tid string,
 		Type:               videoType,
 		LastModified:       lastModified,
 	}
-
-	return videoModel, nil
 }
 
 func getMainImage(videoContent map[string]interface{}, tid string, uuid string) (string, error) {
