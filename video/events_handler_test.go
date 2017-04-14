@@ -77,7 +77,6 @@ func TestOnMessage_Success(t *testing.T) {
 }
 
 func (mock *mockMessageProducer) SendMessage(uuid string, message producer.Message) error {
-	WarnLogger.Println("Send message called")
 	mock.message = message.Body
 	mock.sendCalled = true
 	return nil
