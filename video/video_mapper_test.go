@@ -104,11 +104,11 @@ func TestTransformMsg_UnpublishEvent(t *testing.T) {
 func TestTransformMsg_Success(t *testing.T) {
 	videoInput, err := readContent("video-input.json")
 	if err != nil {
-		assert.FailNow(t, err.Error(), "Test input cannot be loaded from external file")
+		assert.FailNow(t, err.Error(), "Input data for test cannot be loaded from external file")
 	}
 	videoOutput, err := readContent("video-output.json")
 	if err != nil {
-		assert.FailNow(t, err.Error(), "Test output cannot be loaded from external file")
+		assert.FailNow(t, err.Error(), "Output data for test cannot be loaded from external file")
 	}
 
 	var message = consumer.Message{

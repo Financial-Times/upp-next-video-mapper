@@ -52,7 +52,7 @@ func (v VideoMapper) TransformMsg(m consumer.Message) (msg producer.Message, uui
 		return producer.Message{}, "", fmt.Errorf("Could not extract UUID from video message. Skipping invalid JSON: %v", m.Body)
 	}
 
-	contentURI := videoContentURIBase + uuid
+	contentURI := getPrefixedUrl(videoContentURIBase, uuid)
 	isPublishEvent := isPublishEvent(videoContent)
 
 	//it's an unpublish event

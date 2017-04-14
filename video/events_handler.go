@@ -25,7 +25,7 @@ func NewVideoMapperHandler(producerConfig producer.MessageProducerConfig) VideoM
 	return VideoMapperHandler{&messageProducer, videoMapper}
 }
 
-func (v VideoMapperHandler) Listen(hc *Healthcheck, port int) {
+func (v *VideoMapperHandler) Listen(hc *Healthcheck, port int) {
 	r := mux.NewRouter()
 	r.HandleFunc("/map", v.MapHandler).Methods("POST")
 	r.HandleFunc("/__health", hc.Healthcheck()).Methods("GET")
@@ -39,7 +39,7 @@ func (v VideoMapperHandler) Listen(hc *Healthcheck, port int) {
 	}
 }
 
-func (v VideoMapperHandler) OnMessage(m consumer.Message) {
+func (v *VideoMapperHandler) OnMessage(m consumer.Message) {
 	transactionID := m.Headers["X-Request-Id"]
 	if m.Headers["Origin-System-Id"] != videoSystemOrigin {
 		InfoLogger.Printf("%v - Ignoring message with different Origin-System-Id %v", transactionID, m.Headers["Origin-System-Id"])
@@ -53,12 +53,13 @@ func (v VideoMapperHandler) OnMessage(m consumer.Message) {
 	}
 	err = (*v.messageProducer).SendMessage("", videoMsg)
 	if err != nil {
-		WarnLogger.Printf("%v - Error sending transformed message to queue: %v", transactionID, err)
+		ErrorLogger.Printf("%v - Error sending transformed message to queue: %v", transactionID, err)
+		return
 	}
 	InfoLogger.Printf("%v - Mapped and sent for uuid: %v", transactionID, contentUUID)
 }
 
-func (v VideoMapperHandler) MapHandler(w http.ResponseWriter, r *http.Request) {
+func (v *VideoMapperHandler) MapHandler(w http.ResponseWriter, r *http.Request) {
 	transactionID := tid.GetTransactionIDFromRequest(r)
 	InfoLogger.Printf("%v - Received transformation request", transactionID)
 
@@ -67,7 +68,7 @@ func (v VideoMapperHandler) MapHandler(w http.ResponseWriter, r *http.Request) {
 		writerBadRequest(w, err)
 	}
 
-	m := createMessageFromRequest(transactionID, body, r)
+	m := createConsumerMessageFromRequest(transactionID, body, r)
 	videoMsg, _, err := v.videoMapper.TransformMsg(m)
 	if err != nil {
 		writerBadRequest(w, err)
@@ -75,13 +76,12 @@ func (v VideoMapperHandler) MapHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Add("Content-Type", "application/json")
 	_, err = w.Write([]byte(videoMsg.Body))
-
 	if err != nil {
 		WarnLogger.Printf("%v - Writing response error: [%v]", transactionID, err)
 	}
 }
 
-func createMessageFromRequest(tid string, body []byte, r *http.Request) consumer.Message {
+func createConsumerMessageFromRequest(tid string, body []byte, r *http.Request) consumer.Message {
 	return consumer.Message{
 		Body: string(body),
 		Headers: map[string]string{
