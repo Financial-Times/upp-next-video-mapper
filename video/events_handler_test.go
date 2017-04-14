@@ -83,6 +83,11 @@ func (mock *mockMessageProducer) SendMessage(uuid string, message producer.Messa
 	return nil
 }
 
+func (mock *mockMessageProducer) ConnectivityCheck() (string, error) {
+	// do nothing
+	return "", nil
+}
+
 func createEventsHandler() (*VideoMapperHandler, *mockMessageProducer) {
 	mockMsgProducer := &mockMessageProducer{}
 	var msgProducer producer.MessageProducer = mockMsgProducer
