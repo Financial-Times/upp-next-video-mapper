@@ -9,7 +9,7 @@ import (
 
 	"github.com/Financial-Times/go-fthealth"
 	"github.com/Financial-Times/message-queue-gonsumer/consumer"
-	. "github.com/Financial-Times/next-video-mapper/logger"
+	. "github.com/Financial-Times/upp-next-video-mapper/logger"
 )
 
 type Healthcheck struct {

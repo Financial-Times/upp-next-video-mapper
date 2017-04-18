@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	. "github.com/Financial-Times/next-video-mapper/logger"
+	. "github.com/Financial-Times/upp-next-video-mapper/logger"
 	"github.com/satori/go.uuid"
 )
 

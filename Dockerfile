@@ -1,6 +1,6 @@
 FROM alpine:3.4
 
-ARG PROJECT=next-video-mapper
+ARG PROJECT=upp-next-video-mapper
 
 COPY . /${PROJECT}/
 
@@ -19,4 +19,4 @@ RUN apk add --update bash \
   && apk del go git bzr \
   && rm -rf $GOPATH /var/cache/apk/*
 
-CMD [ "/next-video-mapper" ]
+CMD [ "/upp-next-video-mapper" ]

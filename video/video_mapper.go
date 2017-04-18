@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"github.com/Financial-Times/message-queue-go-producer/producer"
 	"github.com/Financial-Times/message-queue-gonsumer/consumer"
-	. "github.com/Financial-Times/next-video-mapper/logger"
+	. "github.com/Financial-Times/upp-next-video-mapper/logger"
 	uuid "github.com/satori/go.uuid"
 	"io"
 	"regexp"
