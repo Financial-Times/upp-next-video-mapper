@@ -14,8 +14,10 @@ type mockMessageProducer struct {
 	sendCalled bool
 }
 
-var mockMsgProducer mockMessageProducer
-var eventsHandler VideoMapperHandler
+var (
+	mockMsgProducer mockMessageProducer
+	eventsHandler   VideoMapperHandler
+)
 
 func init() {
 	InitLogs(os.Stdout, os.Stdout, os.Stderr)
@@ -88,8 +90,11 @@ func (mock *mockMessageProducer) ConnectivityCheck() (string, error) {
 }
 
 func createEventsHandler() (*VideoMapperHandler, *mockMessageProducer) {
-	mockMsgProducer := &mockMessageProducer{}
-	var msgProducer producer.MessageProducer = mockMsgProducer
-	eventsHandler := &VideoMapperHandler{&msgProducer, VideoMapper{}}
-	return eventsHandler, mockMsgProducer
+	var msgProducer producer.MessageProducer
+	var mockMsgProducer mockMessageProducer
+
+	mockMsgProducer = mockMessageProducer{}
+	msgProducer = &mockMsgProducer
+
+	return &VideoMapperHandler{msgProducer, VideoMapper{}}, &mockMsgProducer
 }

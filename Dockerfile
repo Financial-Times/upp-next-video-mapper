@@ -13,7 +13,7 @@ RUN apk add --update bash \
   && mv ${PROJECT} $GOPATH/src/${REPO_ROOT} \
   && cd $GOPATH/src/${REPO_ROOT}/${PROJECT} \
   && go get -t ./... \
-  && go test \
+  && go test -race ./... \
   && go build \
   && mv ${PROJECT} / \
   && apk del go git bzr \

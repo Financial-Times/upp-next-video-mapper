@@ -19,49 +19,42 @@ func main() {
 
 	addresses := app.Strings(cli.StringsOpt{
 		Name:   "queue-addresses",
-		Value:  nil,
 		Desc:   "Addresses to connect to the queue (hostnames).",
 		EnvVar: "Q_ADDR",
 	})
 
 	group := app.String(cli.StringOpt{
 		Name:   "group",
-		Value:  "",
 		Desc:   "Group used to read the messages from the queue.",
 		EnvVar: "Q_GROUP",
 	})
 
 	readTopic := app.String(cli.StringOpt{
 		Name:   "read-topic",
-		Value:  "",
 		Desc:   "The topic to read the meassages from.",
 		EnvVar: "Q_READ_TOPIC",
 	})
 
 	readQueue := app.String(cli.StringOpt{
 		Name:   "read-queue",
-		Value:  "",
 		Desc:   "The queue to read the meassages from.",
 		EnvVar: "Q_READ_QUEUE",
 	})
 
 	writeTopic := app.String(cli.StringOpt{
 		Name:   "write-topic",
-		Value:  "",
 		Desc:   "The topic to write the meassages to.",
 		EnvVar: "Q_WRITE_TOPIC",
 	})
 
 	writeQueue := app.String(cli.StringOpt{
 		Name:   "write-queue",
-		Value:  "",
 		Desc:   "The queue to write the meassages to.",
 		EnvVar: "Q_WRITE_QUEUE",
 	})
 
 	authorization := app.String(cli.StringOpt{
 		Name:   "authorization",
-		Value:  "",
 		Desc:   "Authorization key to access the queue.",
 		EnvVar: "Q_AUTHORIZATION",
 	})

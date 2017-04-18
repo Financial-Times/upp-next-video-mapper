@@ -14,7 +14,7 @@ import (
 const videoSystemOrigin = "http://cmdb.ft.com/systems/next-video-editor"
 
 type VideoMapperHandler struct {
-	messageProducer *producer.MessageProducer
+	messageProducer producer.MessageProducer
 	videoMapper     VideoMapper
 }
 
@@ -22,7 +22,7 @@ func NewVideoMapperHandler(producerConfig producer.MessageProducerConfig) VideoM
 	videoMapper := VideoMapper{}
 	messageProducer := producer.NewMessageProducer(producerConfig)
 
-	return VideoMapperHandler{&messageProducer, videoMapper}
+	return VideoMapperHandler{messageProducer, videoMapper}
 }
 
 func (v *VideoMapperHandler) Listen(hc *Healthcheck, port int) {
@@ -51,7 +51,7 @@ func (v *VideoMapperHandler) OnMessage(m consumer.Message) {
 		WarnLogger.Printf("%v - Error consuming message: %v", transactionID, err)
 		return
 	}
-	err = (*v.messageProducer).SendMessage("", videoMsg)
+	err = (v.messageProducer).SendMessage("", videoMsg)
 	if err != nil {
 		ErrorLogger.Printf("%v - Error sending transformed message to queue: %v", transactionID, err)
 		return

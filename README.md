@@ -1,4 +1,4 @@
-[![CircleCI](https://circleci.com/gh/Financial-Times/content-collection-rw-neo4j.svg?style=svg)](https://circleci.com/gh/Financial-Times/content-collection-rw-neo4j)
+[![CircleCI](https://circleci.com/gh/Financial-Times/upp-next-video-mapper.svg?style=svg)](https://circleci.com/gh/Financial-Times/upp-next-video-mapper)
 [![Coverage Status](https://coveralls.io/repos/github/Financial-Times/next-video-mapper/badge.svg?branch=master)](https://coveralls.io/github/Financial-Times/next-video-mapper?branch=master)
 
 # Next Video Mapper
