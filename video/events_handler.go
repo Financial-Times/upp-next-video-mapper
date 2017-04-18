@@ -5,6 +5,7 @@ import (
 	"github.com/Financial-Times/message-queue-gonsumer/consumer"
 	. "github.com/Financial-Times/upp-next-video-mapper/logger"
 	tid "github.com/Financial-Times/transactionid-utils-go"
+	fthealth "github.com/Financial-Times/go-fthealth/v1_1"
 	"github.com/gorilla/mux"
 	"io/ioutil"
 	"net/http"
@@ -28,8 +29,8 @@ func NewVideoMapperHandler(producerConfig producer.MessageProducerConfig) VideoM
 func (v *VideoMapperHandler) Listen(hc *Healthcheck, port int) {
 	r := mux.NewRouter()
 	r.HandleFunc("/map", v.MapHandler).Methods("POST")
-	r.HandleFunc("/__health", hc.Healthcheck()).Methods("GET")
-	r.HandleFunc("/__gtg", hc.gtg).Methods("GET")
+//	r.HandleFunc("/__health", hc.Healthcheck()).Methods("GET")
+	r.HandleFunc("/__health", fthealth.Handler(hc.Healthcheck()))
 
 	http.Handle("/", r)
 	InfoLogger.Printf("Starting to listen on port [%d]", port)

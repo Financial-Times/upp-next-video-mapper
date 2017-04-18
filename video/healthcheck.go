@@ -4,12 +4,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
-	"net/http"
-
-	"github.com/Financial-Times/go-fthealth"
+	fthealth "github.com/Financial-Times/go-fthealth/v1_1"
 	"github.com/Financial-Times/message-queue-gonsumer/consumer"
 	. "github.com/Financial-Times/upp-next-video-mapper/logger"
+	"io/ioutil"
+	"net/http"
 )
 
 type Healthcheck struct {
@@ -17,19 +16,9 @@ type Healthcheck struct {
 	ConsumerConf consumer.QueueConfig
 }
 
-func (h *Healthcheck) Healthcheck() func(w http.ResponseWriter, r *http.Request) {
-	return fthealth.HandlerParallel("Dependent services healthcheck", "Checks if all the dependent services are reachable and healthy.", h.messageQueueProxyReachable())
-}
-
-func (h *Healthcheck) gtg(writer http.ResponseWriter, req *http.Request) {
-	healthChecks := []func() error{h.checkAggregateMessageQueueProxiesReachable}
-
-	for _, hCheck := range healthChecks {
-		if err := hCheck(); err != nil {
-			writer.WriteHeader(http.StatusServiceUnavailable)
-			return
-		}
-	}
+func (h *Healthcheck) Healthcheck() *fthealth.HealthCheck {
+	checks := []fthealth.Check{h.messageQueueProxyReachable()}
+	return &fthealth.HealthCheck{SystemCode: "upp-next-video-mapper", Name: "Next Video Mapper", Description: "Checks if all the dependent services are reachable and healthy.", Checks: checks}
 }
 
 func (h *Healthcheck) messageQueueProxyReachable() fthealth.Check {
@@ -44,16 +33,16 @@ func (h *Healthcheck) messageQueueProxyReachable() fthealth.Check {
 
 }
 
-func (h *Healthcheck) checkAggregateMessageQueueProxiesReachable() error {
+func (h *Healthcheck) checkAggregateMessageQueueProxiesReachable() (string, error) {
 	errMsg := ""
 	for i := 0; i < len(h.ConsumerConf.Addrs); i++ {
 		err := h.checkMessageQueueProxyReachable(h.ConsumerConf.Addrs[i], h.ConsumerConf.Topic, h.ConsumerConf.AuthorizationKey, h.ConsumerConf.Queue)
 		if err == nil {
-			return nil
+			return "", nil
 		}
 		errMsg = errMsg + fmt.Sprintf("For %s there is an error %v \n", h.ConsumerConf.Addrs[i], err.Error())
 	}
-	return errors.New(errMsg)
+	return errMsg, errors.New(errMsg)
 }
 
 func (h *Healthcheck) checkMessageQueueProxyReachable(address string, topic string, authKey string, queue string) error {
