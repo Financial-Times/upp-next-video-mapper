@@ -2,21 +2,22 @@ package video
 
 import (
 	"fmt"
-	"github.com/Financial-Times/message-queue-gonsumer/consumer"
-	. "github.com/Financial-Times/upp-next-video-mapper/logger"
-	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"os"
 	"testing"
+
+	"github.com/Financial-Times/message-queue-gonsumer/consumer"
+	. "github.com/Financial-Times/upp-next-video-mapper/logger"
+	"github.com/stretchr/testify/assert"
 )
 
-const testUuid = "bad50c54-76d9-30e9-8734-b999c708aa4c"
-const messageTimestamp = "2017-04-13T10:27:32.353Z"
-const xRequestId = "tid_123123"
-
-var (
-	mapper = VideoMapper{}
+const (
+	testUuid         = "bad50c54-76d9-30e9-8734-b999c708aa4c"
+	messageTimestamp = "2017-04-13T10:27:32.353Z"
+	xRequestId       = "tid_123123"
 )
+
+var mapper = VideoMapper{}
 
 func init() {
 	InitLogs(os.Stdout, os.Stdout, os.Stderr)

@@ -2,16 +2,17 @@ package main
 
 import (
 	"fmt"
-	"github.com/Financial-Times/message-queue-go-producer/producer"
-	"github.com/Financial-Times/message-queue-gonsumer/consumer"
-	. "github.com/Financial-Times/upp-next-video-mapper/logger"
-	"github.com/Financial-Times/upp-next-video-mapper/video"
-	"github.com/jawher/mow.cli"
 	"net/http"
 	"os"
 	"os/signal"
 	"sync"
 	"syscall"
+
+	"github.com/Financial-Times/message-queue-go-producer/producer"
+	"github.com/Financial-Times/message-queue-gonsumer/consumer"
+	. "github.com/Financial-Times/upp-next-video-mapper/logger"
+	"github.com/Financial-Times/upp-next-video-mapper/video"
+	"github.com/jawher/mow.cli"
 )
 
 func main() {

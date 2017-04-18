@@ -1,15 +1,17 @@
 package video
 
 import (
-	"github.com/Financial-Times/message-queue-go-producer/producer"
-	"github.com/Financial-Times/message-queue-gonsumer/consumer"
-	. "github.com/Financial-Times/upp-next-video-mapper/logger"
-	tid "github.com/Financial-Times/transactionid-utils-go"
-	fthealth "github.com/Financial-Times/go-fthealth/v1_1"
-	"github.com/gorilla/mux"
 	"io/ioutil"
 	"net/http"
 	"strconv"
+
+	fthealth "github.com/Financial-Times/go-fthealth/v1_1"
+	"github.com/Financial-Times/message-queue-go-producer/producer"
+	"github.com/Financial-Times/message-queue-gonsumer/consumer"
+	"github.com/Financial-Times/service-status-go/httphandlers"
+	tid "github.com/Financial-Times/transactionid-utils-go"
+	. "github.com/Financial-Times/upp-next-video-mapper/logger"
+	"github.com/gorilla/mux"
 )
 
 const videoSystemOrigin = "http://cmdb.ft.com/systems/next-video-editor"
@@ -29,8 +31,9 @@ func NewVideoMapperHandler(producerConfig producer.MessageProducerConfig) VideoM
 func (v *VideoMapperHandler) Listen(hc *Healthcheck, port int) {
 	r := mux.NewRouter()
 	r.HandleFunc("/map", v.MapHandler).Methods("POST")
-//	r.HandleFunc("/__health", hc.Healthcheck()).Methods("GET")
 	r.HandleFunc("/__health", fthealth.Handler(hc.Healthcheck()))
+	r.HandleFunc(httphandlers.BuildInfoPath, httphandlers.BuildInfoHandler)
+	r.HandleFunc(httphandlers.PingPath, httphandlers.PingHandler)
 
 	http.Handle("/", r)
 	InfoLogger.Printf("Starting to listen on port [%d]", port)
@@ -95,9 +98,9 @@ func createConsumerMessageFromRequest(tid string, body []byte, r *http.Request) 
 
 func writerBadRequest(w http.ResponseWriter, err error) {
 	w.WriteHeader(http.StatusBadRequest)
-	_, err2 := w.Write([]byte(err.Error()))
-	if err2 != nil {
-		WarnLogger.Printf("Couldn't write Bad Request response. %v", err2)
+	_, err = w.Write([]byte(err.Error()))
+	if err != nil {
+		WarnLogger.Printf("Couldn't write Bad Request response. %v", err)
 	}
 	return
 }

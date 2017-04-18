@@ -1,9 +1,10 @@
 package video
 
 import (
-	"github.com/willf/bitset"
 	"strconv"
 	"strings"
+
+	"github.com/willf/bitset"
 )
 
 var magic = toBitSet(NewNameUUIDFromBytes([]byte("imageset")).lsb)

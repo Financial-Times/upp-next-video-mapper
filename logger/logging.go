@@ -5,9 +5,11 @@ import (
 	"log"
 )
 
-var InfoLogger *log.Logger
-var WarnLogger *log.Logger
-var ErrorLogger *log.Logger
+var (
+	InfoLogger  *log.Logger
+	WarnLogger  *log.Logger
+	ErrorLogger *log.Logger
+)
 
 const logPattern = log.Ldate | log.Ltime | log.Lmicroseconds | log.Lshortfile | log.LUTC
 

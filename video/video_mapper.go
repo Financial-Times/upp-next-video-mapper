@@ -5,28 +5,28 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
-	"github.com/Financial-Times/message-queue-go-producer/producer"
-	"github.com/Financial-Times/message-queue-gonsumer/consumer"
-	. "github.com/Financial-Times/upp-next-video-mapper/logger"
-	uuid "github.com/satori/go.uuid"
 	"io"
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/Financial-Times/message-queue-go-producer/producer"
+	"github.com/Financial-Times/message-queue-gonsumer/consumer"
+	. "github.com/Financial-Times/upp-next-video-mapper/logger"
+	uuid "github.com/satori/go.uuid"
 )
 
-const videoContentURIBase = "http://next-video-mapper.svc.ft.com/video/model/"
-const videoAuthority = "http://api.ft.com/system/NEXT-VIDEO-EDITOR"
-const ftBrandID = "http://api.ft.com/things/dbb0bdae-1f0c-11e4-b0cb-b2227cce2b54"
-const dateFormat = "2006-01-02T03:04:05.000Z0700"
-
-const publishedDate = "updatedAt"
-const canBeDistributedYes = "yes"
-const videoType = "MediaResource"
-
-var (
-	uuidExtractRegex = regexp.MustCompile(".*/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$")
+const (
+	publishedDate       = "updatedAt"
+	canBeDistributedYes = "yes"
+	videoType           = "MediaResource"
+	videoContentURIBase = "http://next-video-mapper.svc.ft.com/video/model/"
+	videoAuthority      = "http://api.ft.com/system/NEXT-VIDEO-EDITOR"
+	ftBrandID           = "http://api.ft.com/things/dbb0bdae-1f0c-11e4-b0cb-b2227cce2b54"
+	dateFormat          = "2006-01-02T03:04:05.000Z0700"
 )
+
+var uuidExtractRegex = regexp.MustCompile(".*/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$")
 
 type VideoMapper struct {
 }

@@ -1,12 +1,13 @@
 package video
 
 import (
+	"os"
+	"testing"
+
 	"github.com/Financial-Times/message-queue-go-producer/producer"
 	"github.com/Financial-Times/message-queue-gonsumer/consumer"
 	. "github.com/Financial-Times/upp-next-video-mapper/logger"
 	"github.com/stretchr/testify/assert"
-	"os"
-	"testing"
 )
 
 type mockMessageProducer struct {
