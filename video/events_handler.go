@@ -52,7 +52,7 @@ func (v *VideoMapperHandler) OnMessage(m consumer.Message) {
 
 	videoMsg, contentUUID, err := v.videoMapper.TransformMsg(m)
 	if err != nil {
-		WarnLogger.Printf("%v - Error consuming message: %v", transactionID, err)
+		ErrorLogger.Printf("%v - Error consuming message: %v", transactionID, err)
 		return
 	}
 	err = (v.messageProducer).SendMessage("", videoMsg)
@@ -75,6 +75,7 @@ func (v *VideoMapperHandler) MapHandler(w http.ResponseWriter, r *http.Request) 
 	m := createConsumerMessageFromRequest(transactionID, body, r)
 	videoMsg, _, err := v.videoMapper.TransformMsg(m)
 	if err != nil {
+		ErrorLogger.Println(err)
 		writerBadRequest(w, err)
 	}
 

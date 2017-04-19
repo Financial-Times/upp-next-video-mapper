@@ -17,7 +17,6 @@ import (
 )
 
 const (
-	publishedDate       = "updatedAt"
 	canBeDistributedYes = "yes"
 	videoType           = "MediaResource"
 	videoContentURIBase = "http://next-video-mapper.svc.ft.com/video/model/"
@@ -44,12 +43,12 @@ func (v VideoMapper) TransformMsg(m consumer.Message) (msg producer.Message, uui
 
 	var videoContent map[string]interface{}
 	if err := json.Unmarshal([]byte(m.Body), &videoContent); err != nil {
-		return producer.Message{}, "", fmt.Errorf("Video JSON couldn't be unmarshalled. Skipping invalid JSON: %v", m.Body)
+		return producer.Message{}, "", fmt.Errorf("Error: %v - Video JSON couldn't be unmarshalled. Skipping invalid JSON: %v", err.Error(), m.Body)
 	}
 
 	uuid, err = get("id", videoContent)
 	if err != nil {
-		return producer.Message{}, "", fmt.Errorf("Could not extract UUID from video message. Skipping invalid JSON: %v", m.Body)
+		return producer.Message{}, "", fmt.Errorf("Error: %v - Could not extract UUID from video message. Skipping invalid JSON: %v", err.Error(), m.Body)
 	}
 
 	contentURI := getPrefixedUrl(videoContentURIBase, uuid)
