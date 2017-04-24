@@ -90,6 +90,8 @@ func getVideoModel(videoContent map[string]interface{}, uuid string, tid string,
 		WarnLogger.Println(fmt.Errorf("%v - %v", tid, err))
 	}
 
+	canBeSyndicated := getCanBeSyndicated(videoContent, tid)
+
 	i := identifier{
 		Authority:       videoAuthority,
 		IdentifierValue: uuid,
@@ -116,6 +118,20 @@ func getVideoModel(videoContent map[string]interface{}, uuid string, tid string,
 		CanBeDistributed:   canBeDistributedYes,
 		Type:               videoType,
 		LastModified:       lastModified,
+		CanBeSyndicated:    canBeSyndicated,
+	}
+}
+func getCanBeSyndicated(videoContent map[string]interface{}, tid string) string {
+	canBeSyndicated, err := getBool("canBeSyndicated", videoContent)
+	if err != nil {
+		WarnLogger.Println(fmt.Errorf("%v - %v. Defaulting value to true", tid, err))
+		canBeSyndicated = true
+	}
+	switch canBeSyndicated {
+	case false:
+		return "no"
+	default:
+		return "yes"
 	}
 }
 
@@ -222,7 +238,7 @@ func getDataSources(encoding interface{}) ([]dataSource, error) {
 			MediaType:   mediaType,
 			Duration:    duration,
 			VideoCodec:  videoCodec,
-			AudioCondec: audioCodec,
+			AudioCodec:  audioCodec,
 		}
 
 		dataSourcesList = append(dataSourcesList, d)
@@ -302,6 +318,20 @@ func getNumber(key string, inputMap map[string]interface{}) (*float64, error) {
 	}
 
 	return &val, nil
+}
+
+func getBool(key string, inputMap map[string]interface{}) (bool, error) {
+	valueI, ok := inputMap[key]
+	if !ok {
+		return false, fmt.Errorf("[%s] field of native video JSON is null", key)
+	}
+
+	val, isOk := valueI.(bool)
+	if !isOk {
+		return false, fmt.Errorf("[%s] field of native video JSON is not a bool", key)
+	}
+
+	return val, nil
 }
 
 func isValidXHTML(data string) bool {
