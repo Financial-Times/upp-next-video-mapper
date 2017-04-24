@@ -26,4 +26,4 @@ RUN apk --no-cache --virtual .build-dependencies add git \
   && rm -rf $GOPATH/src $GOPATH/pkg $GOPATH/.cache $GOPATH/bin /${PROJECT}-sources
 
 WORKDIR /
-CMD ["sh", "-c", "/${PROJECT}"]
+CMD ["/upp-next-video-mapper"]
