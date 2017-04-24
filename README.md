@@ -92,6 +92,7 @@ You should receive a response body like:
 			"audioCodec": "aac"
 		}],
 		"canBeDistributed": "yes",
+		"canBeSyndicated": "yes",
 		"type": "MediaResource",
 		"lastModified": "2017-04-13T10:27:32.353Z"
 	},
