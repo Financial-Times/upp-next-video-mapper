@@ -32,6 +32,7 @@ type videoPayload struct {
 	CanBeDistributed   string       `json:"canBeDistributed,omitempty"`
 	Type               string       `json:"type,omitempty"`
 	LastModified       string       `json:"lastModified,omitempty"`
+	CanBeSyndicated    string       `json:"canBeSyndicated,omitempty"`
 }
 
 type caption struct {
@@ -46,5 +47,5 @@ type dataSource struct {
 	MediaType   string   `json:"mediaType,omitempty"`
 	Duration    *float64 `json:"duration,omitempty"`
 	VideoCodec  string   `json:"videoCodec,omitempty"`
-	AudioCondec string   `json:"audioCodec,omitempty"`
+	AudioCodec  string   `json:"audioCodec,omitempty"`
 }
