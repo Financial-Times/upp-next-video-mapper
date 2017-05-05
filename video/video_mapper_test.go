@@ -124,6 +124,32 @@ func TestTransformMsg_Success(t *testing.T) {
 	assert.Equal(t, videoOutput, resultMsg.Body)
 }
 
+func TestTransformMsg_WithStoryPackage(t *testing.T) {
+	var message = consumer.Message{
+		Headers: map[string]string{
+			"X-Request-Id":      xRequestId,
+			"Message-Timestamp": messageTimestamp,
+		},
+		Body: `{
+					"id": "a40808ac-1417-4c48-9781-1dd2d8c8c6dc",
+					"title": "ECB and Fed debates hit dollar and euro",
+					"byline": "Filmed by Nicola Stansfield. Produced by Vanessa Kortekaas.",
+					"description": "The FT's Katie Martin highlights the main stories in the markets.",
+					"firstPublishedAt": "2017-04-06T09:58:35.440Z",
+					"publishedAt": "2017-04-12T12:29:48.331Z",
+					"related": [
+						{
+							"id": "494e4386-1a6e-11e7-a266-12672483791a"
+						}
+					]
+				}`,
+	}
+	
+	resultMsg, _, err := mapper.TransformMsg(message)
+	assert.NoError(t, err, "Error not expected for unpublish event")
+	assert.Contains(t, resultMsg.Body, "\"storyPackage\":\"1a58043f-c2ee-3708-b8a6-9e9b5551e1d7\"")
+}
+
 func readContent(fileName string) (string, error) {
 	data, err := ioutil.ReadFile("test-resources/" + fileName)
 	if err != nil {

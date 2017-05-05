@@ -79,6 +79,11 @@ func getVideoModel(videoContent map[string]interface{}, uuid string, tid string,
 		WarnLogger.Println(fmt.Errorf("%v - Extract main image: %v", tid, err))
 	}
 
+	storyPackageUuid, err := getStoryPackage(videoContent, tid, uuid)
+	if err != nil {
+		WarnLogger.Println(fmt.Errorf("%v - Etract story package: %v", tid, err))
+	}
+
 	transcriptionMap, transcript, err := getTranscript(videoContent, uuid)
 	if err != nil {
 		WarnLogger.Println(fmt.Errorf("%v - %v", tid, err))
@@ -112,6 +117,7 @@ func getVideoModel(videoContent map[string]interface{}, uuid string, tid string,
 		FirstPublishedDate: firstPublishDate,
 		PublishedDate:      publishedDate,
 		MainImage:          mainImage,
+		StoryPackage:       storyPackageUuid,
 		Transcript:         transcript,
 		Captions:           captionsList,
 		DataSources:        dataSources,
@@ -157,6 +163,15 @@ func getMainImage(videoContent map[string]interface{}, tid string, uuid string) 
 	}
 
 	return mainImageSetUuid.String(), nil
+}
+
+func getStoryPackage(videoContent map[string]interface{}, tid string, uuid string) (string, error) {
+	_, ok := videoContent["related"]
+	if !ok {
+		return "", fmt.Errorf("Related content is null and will be skipped for uuid: %v", uuid)
+	}
+
+	return NewNameUUIDFromBytes([]byte(uuid)).String(), nil
 }
 
 func getTranscript(videoContent map[string]interface{}, uuid string) (map[string]interface{}, string, error) {
