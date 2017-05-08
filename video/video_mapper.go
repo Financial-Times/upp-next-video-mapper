@@ -81,7 +81,7 @@ func getVideoModel(videoContent map[string]interface{}, uuid string, tid string,
 
 	storyPackageUuid, err := getStoryPackage(videoContent, tid, uuid)
 	if err != nil {
-		WarnLogger.Println(fmt.Errorf("%v - Etract story package: %v", tid, err))
+		WarnLogger.Println(fmt.Errorf("%v - Extract story package: %v", tid, err))
 	}
 
 	transcriptionMap, transcript, err := getTranscript(videoContent, uuid)
