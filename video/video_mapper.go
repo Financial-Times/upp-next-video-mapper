@@ -18,7 +18,7 @@ import (
 
 const (
 	canBeDistributedYes = "yes"
-	videoType           = "MediaResource"
+	videoType           = "Video"
 	videoContentURIBase = "http://next-video-mapper.svc.ft.com/video/model/"
 	videoAuthority      = "http://api.ft.com/system/NEXT-VIDEO-EDITOR"
 	ftBrandID           = "http://api.ft.com/things/dbb0bdae-1f0c-11e4-b0cb-b2227cce2b54"
@@ -100,6 +100,7 @@ func getVideoModel(videoContent map[string]interface{}, uuid string, tid string,
 	b := brand{
 		ID: ftBrandID,
 	}
+	WarnLogger.Printf("Media type: %v", videoType)
 
 	return &videoPayload{
 		Id:                 uuid,
