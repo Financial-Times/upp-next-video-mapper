@@ -13,7 +13,7 @@ import (
 	"github.com/Financial-Times/message-queue-go-producer/producer"
 	"github.com/Financial-Times/message-queue-gonsumer/consumer"
 	. "github.com/Financial-Times/upp-next-video-mapper/logger"
-	uuid "github.com/satori/go.uuid"
+	uuidUtils "github.com/Financial-Times/uuid-utils-go"
 )
 
 const (
@@ -24,6 +24,7 @@ const (
 	ftBrandID           = "http://api.ft.com/things/dbb0bdae-1f0c-11e4-b0cb-b2227cce2b54"
 	dateFormat          = "2006-01-02T03:04:05.000Z0700"
 	defaultAccessLevel  = "free"
+	uuidGenerationSalt  = "storypackage"
 )
 
 var uuidExtractRegex = regexp.MustCompile(".*/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$")
@@ -80,7 +81,7 @@ func getVideoModel(videoContent map[string]interface{}, uuid string, tid string,
 		WarnLogger.Println(fmt.Errorf("%v - Extract main image: %v", tid, err))
 	}
 
-	storyPackageUuid, err := getStoryPackage(videoContent, tid, uuid)
+	storyPackageUuid, err := getStoryPackageUUID(videoContent, tid, uuid)
 	if err != nil {
 		WarnLogger.Println(fmt.Errorf("%v - Extract story package: %v", tid, err))
 	}
@@ -151,31 +152,39 @@ func getMainImage(videoContent map[string]interface{}, tid string, uuid string) 
 		return "", err
 	}
 
-	imageUuidString, err := getUUIDFromURI(imageURI)
+	imageUUIDString, err := getUUIDFromURI(imageURI)
 	if err != nil {
 		return "", err
 	}
 
-	imageUuid, err := NewUUIDFromString(imageUuidString)
+	imageUUID, _ := uuidUtils.NewUUIDFromString(imageUUIDString)
+	uuidDeriver := uuidUtils.NewUUIDDeriverWith(uuidUtils.IMAGE_SET)
+	mainImageSetUUID, err := uuidDeriver.From(imageUUID)
 	if err != nil {
 		return "", err
 	}
 
-	mainImageSetUuid, err := GenerateImageSetUUID(*imageUuid)
-	if err != nil {
-		return "", err
-	}
-
-	return mainImageSetUuid.String(), nil
+	return mainImageSetUUID.String(), nil
 }
 
-func getStoryPackage(videoContent map[string]interface{}, tid string, uuid string) (string, error) {
+func getStoryPackageUUID(videoContent map[string]interface{}, tid string, videoUUID string) (string, error) {
 	_, ok := videoContent["related"]
 	if !ok {
-		return "", fmt.Errorf("Related content is null and will be skipped for uuid: %v", uuid)
+		return "", fmt.Errorf("Related content is null and will be skipped for uuid: %v", videoUUID)
 	}
 
-	return NewNameUUIDFromBytes([]byte(uuid)).String(), nil
+	uuid, err := uuidUtils.NewUUIDFromString(videoUUID)
+	if err != nil {
+		return "", err
+	}
+
+	uuidDeriver := uuidUtils.NewUUIDDeriverWith(uuidGenerationSalt)
+	storyPackageUUID, err := uuidDeriver.From(uuid)
+	if err != nil {
+		return "", err
+	}
+
+	return storyPackageUUID.String(), nil
 }
 
 func getTranscript(videoContent map[string]interface{}, uuid string) (map[string]interface{}, string, error) {
@@ -286,7 +295,6 @@ func buildAndMarshalPublicationEvent(p *videoPayload, contentURI, lastModified, 
 	headers := map[string]string{
 		"X-Request-Id":      pubRef,
 		"Message-Timestamp": lastModified,
-		"Message-Id":        uuid.NewV4().String(),
 		"Message-Type":      "cms-content-published",
 		"Content-Type":      "application/json",
 		"Origin-System-Id":  videoSystemOrigin,
