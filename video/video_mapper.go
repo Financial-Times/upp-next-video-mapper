@@ -23,6 +23,7 @@ const (
 	videoAuthority      = "http://api.ft.com/system/NEXT-VIDEO-EDITOR"
 	ftBrandID           = "http://api.ft.com/things/dbb0bdae-1f0c-11e4-b0cb-b2227cce2b54"
 	dateFormat          = "2006-01-02T03:04:05.000Z0700"
+	defaultAccessLevel  = "free"
 )
 
 var uuidExtractRegex = regexp.MustCompile(".*/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$")
@@ -106,6 +107,8 @@ func getVideoModel(videoContent map[string]interface{}, uuid string, tid string,
 		ID: ftBrandID,
 	}
 
+	accessLevel := getAccessLevel()
+
 	return &videoPayload{
 		Id:                 uuid,
 		Title:              title,
@@ -125,6 +128,7 @@ func getVideoModel(videoContent map[string]interface{}, uuid string, tid string,
 		Type:               videoType,
 		LastModified:       lastModified,
 		CanBeSyndicated:    canBeSyndicated,
+		AccessLevel:        accessLevel,
 	}
 }
 func getCanBeSyndicated(videoContent map[string]interface{}, tid string) string {
@@ -260,6 +264,10 @@ func getDataSources(encoding interface{}) ([]dataSource, error) {
 	}
 
 	return dataSourcesList, nil
+}
+
+func getAccessLevel() string {
+	return defaultAccessLevel
 }
 
 func buildAndMarshalPublicationEvent(p *videoPayload, contentURI, lastModified, pubRef string) (producer.Message, error) {
