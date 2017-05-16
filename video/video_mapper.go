@@ -14,6 +14,7 @@ import (
 	"github.com/Financial-Times/message-queue-gonsumer/consumer"
 	. "github.com/Financial-Times/upp-next-video-mapper/logger"
 	uuidUtils "github.com/Financial-Times/uuid-utils-go"
+	uuid "github.com/satori/go.uuid"
 )
 
 const (
@@ -295,6 +296,7 @@ func buildAndMarshalPublicationEvent(p *videoPayload, contentURI, lastModified, 
 	headers := map[string]string{
 		"X-Request-Id":      pubRef,
 		"Message-Timestamp": lastModified,
+		"Message-Id":        uuid.NewV4().String(),
 		"Message-Type":      "cms-content-published",
 		"Content-Type":      "application/json",
 		"Origin-System-Id":  videoSystemOrigin,
