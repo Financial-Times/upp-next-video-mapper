@@ -144,7 +144,7 @@ func TestTransformMsg_WithStoryPackage(t *testing.T) {
 					]
 				}`,
 	}
-	
+
 	resultMsg, _, err := mapper.TransformMsg(message)
 	assert.NoError(t, err, "Error not expected for unpublish event")
 	assert.Contains(t, resultMsg.Body, "\"storyPackage\":\"a40808ac-1417-4c48-2945-63c109d95533\"")
