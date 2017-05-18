@@ -108,7 +108,6 @@ func getVideoModel(videoContent map[string]interface{}, uuid string, tid string,
 	b := brand{
 		ID: ftBrandID,
 	}
-	WarnLogger.Printf("Media type: %v", videoType)
 
 	accessLevel := getAccessLevel()
 
