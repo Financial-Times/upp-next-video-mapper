@@ -96,7 +96,7 @@ You should receive a response body like:
 		"accessLevel": "free",
 		"type": "MediaResource",
 		"lastModified": "2017-04-13T10:27:32.353Z",
-		"publishReference":"tid_123123"
+		"publishReference": "tid_123123"
 	},
 	"lastModified": "2017-04-13T10:27:32.353Z"
 }
