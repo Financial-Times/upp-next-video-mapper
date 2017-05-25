@@ -93,8 +93,10 @@ You should receive a response body like:
 		}],
 		"canBeDistributed": "yes",
 		"canBeSyndicated": "yes",
+		"accessLevel": "free",
 		"type": "MediaResource",
-		"lastModified": "2017-04-13T10:27:32.353Z"
+		"lastModified": "2017-04-13T10:27:32.353Z",
+		"publishReference": "tid_123123"
 	},
 	"lastModified": "2017-04-13T10:27:32.353Z"
 }

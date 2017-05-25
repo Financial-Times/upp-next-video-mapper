@@ -26,13 +26,16 @@ type videoPayload struct {
 	FirstPublishedDate string       `json:"firstPublishedDate,omitempty"`
 	PublishedDate      string       `json:"publishedDate,omitempty"`
 	MainImage          string       `json:"mainImage,omitempty"`
+	StoryPackage       string       `json:"storyPackage,omitempty"`
 	Transcript         string       `json:"transcript,omitempty"`
 	Captions           []caption    `json:"captions,omitempty"`
 	DataSources        []dataSource `json:"dataSource,omitempty"`
 	CanBeDistributed   string       `json:"canBeDistributed,omitempty"`
 	Type               string       `json:"type,omitempty"`
 	LastModified       string       `json:"lastModified,omitempty"`
+	PublishReference   string       `json:"publishReference,omitempty"`
 	CanBeSyndicated    string       `json:"canBeSyndicated,omitempty"`
+	AccessLevel        string       `json:"accessLevel,omitempty"`
 }
 
 type caption struct {

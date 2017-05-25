@@ -13,6 +13,7 @@ import (
 	"github.com/Financial-Times/message-queue-go-producer/producer"
 	"github.com/Financial-Times/message-queue-gonsumer/consumer"
 	. "github.com/Financial-Times/upp-next-video-mapper/logger"
+	uuidUtils "github.com/Financial-Times/uuid-utils-go"
 	uuid "github.com/satori/go.uuid"
 )
 
@@ -23,6 +24,8 @@ const (
 	videoAuthority      = "http://api.ft.com/system/NEXT-VIDEO-EDITOR"
 	ftBrandID           = "http://api.ft.com/things/dbb0bdae-1f0c-11e4-b0cb-b2227cce2b54"
 	dateFormat          = "2006-01-02T03:04:05.000Z0700"
+	defaultAccessLevel  = "free"
+	uuidGenerationSalt  = "storypackage"
 )
 
 var (
@@ -82,6 +85,11 @@ func getVideoModel(videoContent map[string]interface{}, uuid string, tid string,
 		Logger.WarnMessageEvent("Cannot extract main image from video model", tid, uuid, err)
 	}
 
+	storyPackageUuid, err := getStoryPackageUUID(videoContent, tid, uuid)
+	if err != nil {
+		Logger.WarnMessageEvent("Cannot extract captions from video model", tid, uuid, err)
+	}
+
 	transcriptionMap, transcript, err := getTranscript(videoContent, uuid)
 	if err != nil {
 		Logger.WarnMessageEvent("Cannot extract transcription from video model", tid, uuid, err)
@@ -104,6 +112,8 @@ func getVideoModel(videoContent map[string]interface{}, uuid string, tid string,
 		ID: ftBrandID,
 	}
 
+	accessLevel := getAccessLevel()
+
 	return &videoPayload{
 		Id:                 uuid,
 		Title:              title,
@@ -115,13 +125,16 @@ func getVideoModel(videoContent map[string]interface{}, uuid string, tid string,
 		FirstPublishedDate: firstPublishDate,
 		PublishedDate:      publishedDate,
 		MainImage:          mainImage,
+		StoryPackage:       storyPackageUuid,
 		Transcript:         transcript,
 		Captions:           captionsList,
 		DataSources:        dataSources,
 		CanBeDistributed:   canBeDistributedYes,
 		Type:               videoType,
 		LastModified:       lastModified,
+		PublishReference:   tid,
 		CanBeSyndicated:    canBeSyndicated,
+		AccessLevel:        accessLevel,
 	}
 }
 func getCanBeSyndicated(videoContent map[string]interface{}, tid string) string {
@@ -144,22 +157,39 @@ func getMainImage(videoContent map[string]interface{}, tid string, uuid string) 
 		return "", err
 	}
 
-	imageUuidString, err := getUUIDFromURI(imageURI)
+	imageUUIDString, err := getUUIDFromURI(imageURI)
 	if err != nil {
 		return "", err
 	}
 
-	imageUuid, err := NewUUIDFromString(imageUuidString)
+	imageUUID, _ := uuidUtils.NewUUIDFromString(imageUUIDString)
+	uuidDeriver := uuidUtils.NewUUIDDeriverWith(uuidUtils.IMAGE_SET)
+	mainImageSetUUID, err := uuidDeriver.From(imageUUID)
 	if err != nil {
 		return "", err
 	}
 
-	mainImageSetUuid, err := GenerateImageSetUUID(*imageUuid)
+	return mainImageSetUUID.String(), nil
+}
+
+func getStoryPackageUUID(videoContent map[string]interface{}, tid string, videoUUID string) (string, error) {
+	_, ok := videoContent["related"]
+	if !ok {
+		return "", fmt.Errorf("Related content is null and will be skipped for uuid: %v", videoUUID)
+	}
+
+	uuid, err := uuidUtils.NewUUIDFromString(videoUUID)
 	if err != nil {
 		return "", err
 	}
 
-	return mainImageSetUuid.String(), nil
+	uuidDeriver := uuidUtils.NewUUIDDeriverWith(uuidGenerationSalt)
+	storyPackageUUID, err := uuidDeriver.From(uuid)
+	if err != nil {
+		return "", err
+	}
+
+	return storyPackageUUID.String(), nil
 }
 
 func getTranscript(videoContent map[string]interface{}, uuid string) (map[string]interface{}, string, error) {
@@ -248,6 +278,10 @@ func getDataSources(encoding interface{}) ([]dataSource, error) {
 	}
 
 	return dataSourcesList, nil
+}
+
+func getAccessLevel() string {
+	return defaultAccessLevel
 }
 
 func buildAndMarshalPublicationEvent(p *videoPayload, contentURI, lastModified, pubRef string) (producer.Message, error) {
