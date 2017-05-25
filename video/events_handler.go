@@ -1,6 +1,7 @@
 package video
 
 import (
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strconv"
@@ -10,7 +11,6 @@ import (
 	"github.com/Financial-Times/message-queue-gonsumer/consumer"
 	"github.com/Financial-Times/service-status-go/httphandlers"
 	tid "github.com/Financial-Times/transactionid-utils-go"
-	. "github.com/Financial-Times/upp-next-video-mapper/logger"
 	"github.com/gorilla/mux"
 )
 
@@ -36,53 +36,53 @@ func (v *VideoMapperHandler) Listen(hc *Healthcheck, port int) {
 	r.HandleFunc(httphandlers.PingPath, httphandlers.PingHandler)
 
 	http.Handle("/", r)
-	InfoLogger.Printf("Starting to listen on port [%d]", port)
+	Logger.ServiceStartedEvent(port)
 	err := http.ListenAndServe(":"+strconv.Itoa(port), nil)
 	if err != nil {
-		ErrorLogger.Panicf("Couldn't set up HTTP listener: %+v\n", err)
+		Logger.ErrorMessageEvent("Couldn't set up HTTP listener", "", "", err)
 	}
 }
 
 func (v *VideoMapperHandler) OnMessage(m consumer.Message) {
 	transactionID := m.Headers["X-Request-Id"]
 	if m.Headers["Origin-System-Id"] != videoSystemOrigin {
-		InfoLogger.Printf("%v - Ignoring message with different Origin-System-Id %v", transactionID, m.Headers["Origin-System-Id"])
+		Logger.InfoMessageEvent(fmt.Sprintf("Ignoring message with different Origin-System-Id %v", m.Headers["Origin-System-Id"]), transactionID, "")
 		return
 	}
 
 	videoMsg, contentUUID, err := v.videoMapper.TransformMsg(m)
 	if err != nil {
-		ErrorLogger.Printf("%v - Error consuming message: %v", transactionID, err)
+		Logger.ErrorMessageEvent("Error consuming message: ", transactionID, contentUUID, err)
 		return
 	}
 	err = (v.messageProducer).SendMessage("", videoMsg)
 	if err != nil {
-		ErrorLogger.Printf("%v - Error sending transformed message to queue: %v", transactionID, err)
+		Logger.ErrorMessageEvent("Error sending transformed message to queue", transactionID, contentUUID, err)
 		return
 	}
-	InfoLogger.Printf("%v - Mapped and sent for uuid: %v", transactionID, contentUUID)
+	Logger.InfoMessageEvent(fmt.Sprintf("Mapped and sent for uuid: %v", contentUUID), transactionID, contentUUID)
 }
 
 func (v *VideoMapperHandler) MapHandler(w http.ResponseWriter, r *http.Request) {
 	transactionID := tid.GetTransactionIDFromRequest(r)
-	InfoLogger.Printf("%v - Received transformation request", transactionID)
+	Logger.InfoMessageEvent("Received transformation request", transactionID, "")
 
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		writerBadRequest(w, err)
+		writerBadRequest(w, transactionID, err)
 	}
 
 	m := createConsumerMessageFromRequest(transactionID, body, r)
-	videoMsg, _, err := v.videoMapper.TransformMsg(m)
+	videoMsg, contentUUID, err := v.videoMapper.TransformMsg(m)
 	if err != nil {
-		ErrorLogger.Println(err)
-		writerBadRequest(w, err)
+		Logger.ErrorMessageEvent("Error consuming message: ", transactionID, contentUUID, err)
+		writerBadRequest(w, transactionID, err)
 	}
 
 	w.Header().Add("Content-Type", "application/json")
 	_, err = w.Write([]byte(videoMsg.Body))
 	if err != nil {
-		WarnLogger.Printf("%v - Writing response error: [%v]", transactionID, err)
+		Logger.WarnMessageEvent("Error writing response", transactionID, contentUUID, err)
 	}
 }
 
@@ -97,11 +97,11 @@ func createConsumerMessageFromRequest(tid string, body []byte, r *http.Request) 
 	}
 }
 
-func writerBadRequest(w http.ResponseWriter, err error) {
+func writerBadRequest(w http.ResponseWriter, transactionID string, err error) {
 	w.WriteHeader(http.StatusBadRequest)
 	_, err = w.Write([]byte(err.Error()))
 	if err != nil {
-		WarnLogger.Printf("Couldn't write Bad Request response. %v", err)
+		Logger.WarnMessageEvent("Couldn't write Bad Request response.", transactionID, "", err)
 	}
 	return
 }

@@ -9,7 +9,6 @@ import (
 
 	fthealth "github.com/Financial-Times/go-fthealth/v1_1"
 	"github.com/Financial-Times/message-queue-gonsumer/consumer"
-	. "github.com/Financial-Times/upp-next-video-mapper/logger"
 )
 
 type Healthcheck struct {
@@ -49,7 +48,7 @@ func (h *Healthcheck) checkAggregateMessageQueueProxiesReachable() (string, erro
 func (h *Healthcheck) checkMessageQueueProxyReachable(address string, topic string, authKey string, queue string) error {
 	req, err := http.NewRequest("GET", address+"/topics", nil)
 	if err != nil {
-		WarnLogger.Printf("Could not connect to proxy: %v", err.Error())
+		Logger.Log.Errorf("Could not connect to proxy: %v", err.Error())
 		return err
 	}
 	if len(authKey) > 0 {
@@ -60,7 +59,7 @@ func (h *Healthcheck) checkMessageQueueProxyReachable(address string, topic stri
 	}
 	resp, err := h.Client.Do(req)
 	if err != nil {
-		WarnLogger.Printf("Could not connect to proxy: %v", err.Error())
+		Logger.Log.Errorf("Could not connect to proxy: %v", err.Error())
 		return err
 	}
 	defer func() { _ = resp.Body.Close() }()

@@ -3,11 +3,9 @@ package video
 import (
 	"fmt"
 	"io/ioutil"
-	"os"
 	"testing"
 
 	"github.com/Financial-Times/message-queue-gonsumer/consumer"
-	. "github.com/Financial-Times/upp-next-video-mapper/logger"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -17,10 +15,6 @@ const (
 )
 
 var mapper = VideoMapper{}
-
-func init() {
-	InitLogs(os.Stdout, os.Stdout, os.Stderr)
-}
 
 func TestTransformMsg_TidHeaderMissing(t *testing.T) {
 	var message = consumer.Message{
