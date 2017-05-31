@@ -129,6 +129,7 @@ func getVideoModel(videoContent map[string]interface{}, uuid string, tid string,
 		CanBeDistributed:   canBeDistributedYes,
 		Type:               videoType,
 		LastModified:       lastModified,
+		PublishReference:   tid,
 		CanBeSyndicated:    canBeSyndicated,
 		AccessLevel:        accessLevel,
 	}

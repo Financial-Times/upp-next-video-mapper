@@ -33,6 +33,7 @@ type videoPayload struct {
 	CanBeDistributed   string       `json:"canBeDistributed,omitempty"`
 	Type               string       `json:"type,omitempty"`
 	LastModified       string       `json:"lastModified,omitempty"`
+	PublishReference   string       `json:"publishReference,omitempty"`
 	CanBeSyndicated    string       `json:"canBeSyndicated,omitempty"`
 	AccessLevel        string       `json:"accessLevel,omitempty"`
 }
