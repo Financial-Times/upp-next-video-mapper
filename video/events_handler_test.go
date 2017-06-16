@@ -15,11 +15,6 @@ type mockMessageProducer struct {
 	sendCalled bool
 }
 
-var (
-	mockMsgProducer mockMessageProducer
-	eventsHandler   VideoMapperHandler
-)
-
 func init() {
 	InitLogs(os.Stdout, os.Stdout, os.Stderr)
 }

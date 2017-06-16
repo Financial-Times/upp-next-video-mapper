@@ -10,9 +10,10 @@ import (
 
 	"github.com/Financial-Times/message-queue-go-producer/producer"
 	"github.com/Financial-Times/message-queue-gonsumer/consumer"
+	"github.com/jawher/mow.cli"
+
 	. "github.com/Financial-Times/upp-next-video-mapper/logger"
 	"github.com/Financial-Times/upp-next-video-mapper/video"
-	"github.com/jawher/mow.cli"
 )
 
 func main() {
@@ -96,7 +97,7 @@ func main() {
 		messageConsumer := consumer.NewConsumer(consumerConfig, handler.OnMessage, &http.Client{})
 		InfoLogger.Println(prettyPrintConfig(consumerConfig, producerConfig))
 
-		hc := &video.Healthcheck{Client: http.Client{}, ConsumerConf: consumerConfig}
+		hc := video.NewHealthCheck(&producerConfig, &consumerConfig)
 
 		go handler.Listen(hc, *port)
 		consumeUntilSigterm(messageConsumer)

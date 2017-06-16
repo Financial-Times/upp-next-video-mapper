@@ -12,9 +12,10 @@ import (
 
 	"github.com/Financial-Times/message-queue-go-producer/producer"
 	"github.com/Financial-Times/message-queue-gonsumer/consumer"
-	. "github.com/Financial-Times/upp-next-video-mapper/logger"
 	uuidUtils "github.com/Financial-Times/uuid-utils-go"
 	uuid "github.com/satori/go.uuid"
+
+	. "github.com/Financial-Times/upp-next-video-mapper/logger"
 )
 
 const (
