@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
@@ -10,7 +9,6 @@ import (
 
 	"github.com/Financial-Times/message-queue-go-producer/producer"
 	"github.com/Financial-Times/message-queue-gonsumer/consumer"
-	. "github.com/Financial-Times/upp-next-video-mapper/logger"
 	"github.com/Financial-Times/upp-next-video-mapper/video"
 	"github.com/jawher/mow.cli"
 )
@@ -68,10 +66,8 @@ func main() {
 	})
 
 	app.Action = func() {
-		InitLogs(os.Stdout, os.Stdout, os.Stderr)
-
 		if len(*addresses) == 0 {
-			ErrorLogger.Println("No queue address provided. Quitting...")
+			video.Logger.Log.Error("No queue address provided. Quitting...")
 			cli.Exit(1)
 		}
 
@@ -94,22 +90,20 @@ func main() {
 
 		handler := video.NewVideoMapperHandler(producerConfig)
 		messageConsumer := consumer.NewConsumer(consumerConfig, handler.OnMessage, &http.Client{})
-		InfoLogger.Println(prettyPrintConfig(consumerConfig, producerConfig))
-
 		hc := &video.Healthcheck{Client: http.Client{}, ConsumerConf: consumerConfig}
 
 		go handler.Listen(hc, *port)
-		consumeUntilSigterm(messageConsumer)
+		consumeUntilSigterm(messageConsumer, consumerConfig)
 	}
 
 	err := app.Run(os.Args)
 	if err != nil {
-		println(err)
+		video.Logger.Log.Errorf("App could not start, error=[%s]\n", err)
 	}
 }
 
-func consumeUntilSigterm(messageConsumer consumer.MessageConsumer) {
-	InfoLogger.Printf("Starting queue consumer: %#v", messageConsumer)
+func consumeUntilSigterm(messageConsumer consumer.MessageConsumer, config consumer.QueueConfig) {
+	video.Logger.QueueConsumerStarted(config.Topic)
 	var consumerWaitGroup sync.WaitGroup
 	consumerWaitGroup.Add(1)
 
@@ -123,16 +117,4 @@ func consumeUntilSigterm(messageConsumer consumer.MessageConsumer) {
 	<-ch
 	messageConsumer.Stop()
 	consumerWaitGroup.Wait()
-}
-
-func prettyPrintConfig(c consumer.QueueConfig, p producer.MessageProducerConfig) string {
-	return fmt.Sprintf("Config: [\n\t%s\n\t%s\n]", prettyPrintConsumerConfig(c), prettyPrintProducerConfig(p))
-}
-
-func prettyPrintConsumerConfig(c consumer.QueueConfig) string {
-	return fmt.Sprintf("consumerConfig: [\n\t\taddr: [%v]\n\t\tgroup: [%v]\n\t\ttopic: [%v]\n\t\treadQueueHeader: [%v]\n\t]", c.Addrs, c.Group, c.Topic, c.Queue)
-}
-
-func prettyPrintProducerConfig(p producer.MessageProducerConfig) string {
-	return fmt.Sprintf("producerConfig: [\n\t\taddr: [%v]\n\t\ttopic: [%v]\n\t\twriteQueueHeader: [%v]\n\t]", p.Addr, p.Topic, p.Queue)
 }

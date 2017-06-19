@@ -28,7 +28,10 @@ const (
 	uuidGenerationSalt  = "storypackage"
 )
 
-var uuidExtractRegex = regexp.MustCompile(".*/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$")
+var (
+	uuidExtractRegex            = regexp.MustCompile(".*/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$")
+	Logger           *AppLogger = NewAppLogger("next-video-mapper")
+)
 
 type VideoMapper struct {
 }
@@ -79,23 +82,23 @@ func getVideoModel(videoContent map[string]interface{}, uuid string, tid string,
 
 	mainImage, err := getMainImage(videoContent, tid, uuid)
 	if err != nil {
-		WarnLogger.Println(fmt.Errorf("%v - Extract main image: %v", tid, err))
+		Logger.WarnMessageEvent("Cannot extract main image from video model", tid, uuid, err)
 	}
 
 	storyPackageUuid, err := getStoryPackageUUID(videoContent, tid, uuid)
 	if err != nil {
-		WarnLogger.Println(fmt.Errorf("%v - Extract story package: %v", tid, err))
+		Logger.WarnMessageEvent("Cannot extract captions from video model", tid, uuid, err)
 	}
 
 	transcriptionMap, transcript, err := getTranscript(videoContent, uuid)
 	if err != nil {
-		WarnLogger.Println(fmt.Errorf("%v - %v", tid, err))
+		Logger.WarnMessageEvent("Cannot extract transcription from video model", tid, uuid, err)
 	}
 
 	captionsList := getCaptions(transcriptionMap)
 	dataSources, err := getDataSources(videoContent["encoding"])
 	if err != nil {
-		WarnLogger.Println(fmt.Errorf("%v - %v", tid, err))
+		Logger.WarnMessageEvent("Cannot extract captions from video model", tid, uuid, err)
 	}
 
 	canBeSyndicated := getCanBeSyndicated(videoContent, tid)
@@ -137,7 +140,7 @@ func getVideoModel(videoContent map[string]interface{}, uuid string, tid string,
 func getCanBeSyndicated(videoContent map[string]interface{}, tid string) string {
 	canBeSyndicated, err := getBool("canBeSyndicated", videoContent)
 	if err != nil {
-		WarnLogger.Println(fmt.Errorf("%v - %v. Defaulting value to true", tid, err))
+		Logger.WarnMessageEvent("Cannot extract canBeSyndicated field - defaulting value to true", tid, "", err)
 		canBeSyndicated = true
 	}
 	switch canBeSyndicated {
@@ -290,7 +293,7 @@ func buildAndMarshalPublicationEvent(p *videoPayload, contentURI, lastModified, 
 
 	marshalledEvent, err := unsafeJSONMarshal(e)
 	if err != nil {
-		WarnLogger.Printf("%v - Couldn't marshall event %v, skipping message.", pubRef, e)
+		Logger.WarnMessageEvent("Couldn't marshall event, skipping message.", pubRef, "", err)
 		return producer.Message{}, err
 	}
 

@@ -1,23 +1,76 @@
 package logger
 
-import (
-	"io"
-	"log"
-)
+import "github.com/Sirupsen/logrus"
 
-var (
-	InfoLogger  *log.Logger
-	WarnLogger  *log.Logger
-	ErrorLogger *log.Logger
-)
+type AppLogger struct {
+	Log         *logrus.Logger
+	ServiceName string
+}
 
-const logPattern = log.Ldate | log.Ltime | log.Lmicroseconds | log.Lshortfile | log.LUTC
+func NewAppLogger(serviceName string) *AppLogger {
+	logrus.SetLevel(logrus.InfoLevel)
+	log := logrus.New()
+	log.Formatter = new(logrus.JSONFormatter)
 
-func InitLogs(infoHandle io.Writer, warnHandle io.Writer, errorHandle io.Writer) {
-	//to be used for INFO-level logging: InfoLogger.Println("foo is now bar")
-	InfoLogger = log.New(infoHandle, "INFO  - ", logPattern)
-	//to be used for WARN-level logging: warnLogger.Println("foo is now bar")
-	WarnLogger = log.New(warnHandle, "WARN  - ", logPattern)
-	//to be used for ERROR-level logging: errorLogger.Println("foo is now bar")
-	ErrorLogger = log.New(errorHandle, "ERROR - ", logPattern)
+	return &AppLogger{Log: log, ServiceName: serviceName}
+}
+
+func (appLogger *AppLogger) ServiceStartedEvent(port int) {
+	event := make(map[string]interface{})
+	event["service_name"] = appLogger.ServiceName
+	event["event"] = "service_started"
+	appLogger.Log.WithFields(event).Infof("Starting to listen on port [%d]", port)
+}
+
+func (appLogger *AppLogger) QueueConsumerStarted(queueTopic string) {
+	event := make(map[string]interface{})
+	event["service_name"] = appLogger.ServiceName
+	event["event"] = "consume_queue"
+	appLogger.Log.WithFields(event).Infof("Starting queue consumer: %v", queueTopic)
+}
+
+func (appLogger *AppLogger) InfoMessageEvent(message string, transactionID string, contentUUID string) {
+	event := make(map[string]interface{})
+	event["service_name"] = appLogger.ServiceName
+	event["event"] = "mapping"
+	event["transaction_id"] = transactionID
+	if contentUUID != "" {
+		event["uuid"] = contentUUID
+	}
+
+	appLogger.Log.WithFields(event).Info(message)
+}
+
+func (appLogger *AppLogger) WarnMessageEvent(message string, transactionID string, contentUUID string, err error) {
+	event := make(map[string]interface{})
+	event["event"] = "error"
+	event["service_name"] = appLogger.ServiceName
+
+	if err != nil {
+		event["error"] = err
+	}
+	if transactionID != "" {
+		event["transaction_id"] = transactionID
+	}
+	if contentUUID != "" {
+		event["uuid"] = contentUUID
+	}
+
+	appLogger.Log.WithFields(event).Warn(message)
+}
+
+func (appLogger *AppLogger) ErrorMessageEvent(message string, transactionID string, contentUUID string, err error) {
+	event := make(map[string]interface{})
+	event["event"] = "error"
+	event["service_name"] = appLogger.ServiceName
+	event["error"] = err
+
+	if transactionID != "" {
+		event["transaction_id"] = transactionID
+	}
+	if contentUUID != "" {
+		event["uuid"] = contentUUID
+	}
+
+	appLogger.Log.WithFields(event).Error(message)
 }
