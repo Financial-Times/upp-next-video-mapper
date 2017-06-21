@@ -21,9 +21,9 @@ type VideoMapperHandler struct {
 	videoMapper     VideoMapper
 }
 
-func NewVideoMapperHandler(producerConfig producer.MessageProducerConfig) VideoMapperHandler {
+func NewVideoMapperHandler(producerConfig producer.MessageProducerConfig, client *http.Client) VideoMapperHandler {
 	videoMapper := VideoMapper{}
-	messageProducer := producer.NewMessageProducer(producerConfig)
+	messageProducer := producer.NewMessageProducerWithHTTPClient(producerConfig, client)
 
 	return VideoMapperHandler{messageProducer, videoMapper}
 }
@@ -85,6 +85,10 @@ func (v *VideoMapperHandler) MapHandler(w http.ResponseWriter, r *http.Request) 
 	if err != nil {
 		WarnLogger.Printf("%v - Writing response error: [%v]", transactionID, err)
 	}
+}
+
+func (v *VideoMapperHandler) GetProducer() producer.MessageProducer {
+	return v.messageProducer
 }
 
 func createConsumerMessageFromRequest(tid string, body []byte, r *http.Request) consumer.Message {

@@ -198,7 +198,7 @@ func getTranscript(videoContent map[string]interface{}, uuid string) (map[string
 
 	transcriptionMap, ok := transcription.(map[string]interface{})
 	if !ok {
-		return nil, "", fmt.Errorf("%v - Transcription is null and will be skipped for uuid: %v", uuid)
+		return nil, "", fmt.Errorf("Transcription is null and will be skipped for uuid: %v", uuid)
 	}
 
 	transcript, err := get("transcript", transcriptionMap)

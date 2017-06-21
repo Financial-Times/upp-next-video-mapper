@@ -2,6 +2,7 @@ package video
 
 import (
 	"errors"
+	"net/http"
 	"net/http/httptest"
 	"testing"
 
@@ -18,9 +19,10 @@ func initializeHealthCheck(isProducerConnectionHealthy bool, isConsumerConnectio
 }
 
 func TestNewHealthCheck(t *testing.T) {
-	c := &consumer.QueueConfig{}
-	p := &producer.MessageProducerConfig{}
-	hc := NewHealthCheck(p, c)
+	hc := NewHealthCheck(
+		producer.NewMessageProducer(producer.MessageProducerConfig{}),
+		consumer.NewConsumer(consumer.QueueConfig{}, func(m consumer.Message) {}, http.DefaultClient),
+	)
 
 	assert.NotNil(t, hc.consumer)
 	assert.NotNil(t, hc.producer)

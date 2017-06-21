@@ -2,7 +2,6 @@ package video
 
 import (
 	"net/http"
-	"time"
 
 	fthealth "github.com/Financial-Times/go-fthealth/v1_1"
 	"github.com/Financial-Times/message-queue-go-producer/producer"
@@ -10,17 +9,12 @@ import (
 	"github.com/Financial-Times/service-status-go/gtg"
 )
 
-const requestTimeout = 4500
-
 type HealthCheck struct {
 	consumer consumer.MessageConsumer
 	producer producer.MessageProducer
 }
 
-func NewHealthCheck(producerConf *producer.MessageProducerConfig, consumerConf *consumer.QueueConfig) *HealthCheck {
-	httpClient := &http.Client{Timeout: requestTimeout * time.Millisecond}
-	p := producer.NewMessageProducerWithHTTPClient(*producerConf, httpClient)
-	c := consumer.NewConsumer(*consumerConf, func(m consumer.Message) {}, httpClient)
+func NewHealthCheck(p producer.MessageProducer, c consumer.MessageConsumer) *HealthCheck {
 	return &HealthCheck{
 		consumer: c,
 		producer: p,
