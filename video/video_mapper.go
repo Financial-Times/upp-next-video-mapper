@@ -24,7 +24,7 @@ const (
 	videoContentURIBase = "http://next-video-mapper.svc.ft.com/video/model/"
 	videoAuthority      = "http://api.ft.com/system/NEXT-VIDEO-EDITOR"
 	ftBrandID           = "http://api.ft.com/things/dbb0bdae-1f0c-11e4-b0cb-b2227cce2b54"
-	dateFormat          = "2006-01-02T03:04:05.000Z0700"
+	dateFormat          = "2006-01-02T15:04:05.000Z0700"
 	defaultAccessLevel  = "free"
 	uuidGenerationSalt  = "storypackage"
 )
