@@ -7,8 +7,9 @@ import (
 	"testing"
 
 	"github.com/Financial-Times/message-queue-gonsumer/consumer"
-	. "github.com/Financial-Times/upp-next-video-mapper/logger"
 	"github.com/stretchr/testify/assert"
+
+	. "github.com/Financial-Times/upp-next-video-mapper/logger"
 )
 
 const (

@@ -12,9 +12,10 @@ import (
 
 	"github.com/Financial-Times/message-queue-go-producer/producer"
 	"github.com/Financial-Times/message-queue-gonsumer/consumer"
-	. "github.com/Financial-Times/upp-next-video-mapper/logger"
 	uuidUtils "github.com/Financial-Times/uuid-utils-go"
 	uuid "github.com/satori/go.uuid"
+
+	. "github.com/Financial-Times/upp-next-video-mapper/logger"
 )
 
 const (
@@ -23,7 +24,7 @@ const (
 	videoContentURIBase = "http://next-video-mapper.svc.ft.com/video/model/"
 	videoAuthority      = "http://api.ft.com/system/NEXT-VIDEO-EDITOR"
 	ftBrandID           = "http://api.ft.com/things/dbb0bdae-1f0c-11e4-b0cb-b2227cce2b54"
-	dateFormat          = "2006-01-02T03:04:05.000Z0700"
+	dateFormat          = "2006-01-02T15:04:05.000Z0700"
 	defaultAccessLevel  = "free"
 	uuidGenerationSalt  = "storypackage"
 )
@@ -197,7 +198,7 @@ func getTranscript(videoContent map[string]interface{}, uuid string) (map[string
 
 	transcriptionMap, ok := transcription.(map[string]interface{})
 	if !ok {
-		return nil, "", fmt.Errorf("%v - Transcription is null and will be skipped for uuid: %v", uuid)
+		return nil, "", fmt.Errorf("Transcription is null and will be skipped for uuid: %v", uuid)
 	}
 
 	transcript, err := get("transcript", transcriptionMap)

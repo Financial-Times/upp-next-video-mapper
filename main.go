@@ -2,17 +2,20 @@ package main
 
 import (
 	"fmt"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
 	"sync"
 	"syscall"
+	"time"
 
 	"github.com/Financial-Times/message-queue-go-producer/producer"
 	"github.com/Financial-Times/message-queue-gonsumer/consumer"
+	"github.com/jawher/mow.cli"
+
 	. "github.com/Financial-Times/upp-next-video-mapper/logger"
 	"github.com/Financial-Times/upp-next-video-mapper/video"
-	"github.com/jawher/mow.cli"
 )
 
 func main() {
@@ -75,6 +78,19 @@ func main() {
 			cli.Exit(1)
 		}
 
+		httpClient := &http.Client{
+			Transport: &http.Transport{
+				Proxy: http.ProxyFromEnvironment,
+				DialContext: (&net.Dialer{
+					Timeout:   30 * time.Second,
+					KeepAlive: 30 * time.Second,
+				}).DialContext,
+				MaxIdleConnsPerHost:   20,
+				TLSHandshakeTimeout:   3 * time.Second,
+				ExpectContinueTimeout: 1 * time.Second,
+			},
+		}
+
 		consumerConfig := consumer.QueueConfig{
 			Addrs:                *addresses,
 			Group:                *group,
@@ -92,11 +108,11 @@ func main() {
 			Authorization: *authorization,
 		}
 
-		handler := video.NewVideoMapperHandler(producerConfig)
-		messageConsumer := consumer.NewConsumer(consumerConfig, handler.OnMessage, &http.Client{})
+		handler := video.NewVideoMapperHandler(producerConfig, httpClient)
+		messageConsumer := consumer.NewConsumer(consumerConfig, handler.OnMessage, httpClient)
 		InfoLogger.Println(prettyPrintConfig(consumerConfig, producerConfig))
 
-		hc := &video.Healthcheck{Client: http.Client{}, ConsumerConf: consumerConfig}
+		hc := video.NewHealthCheck(handler.GetProducer(), messageConsumer)
 
 		go handler.Listen(hc, *port)
 		consumeUntilSigterm(messageConsumer)

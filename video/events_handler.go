@@ -5,13 +5,13 @@ import (
 	"net/http"
 	"strconv"
 
-	fthealth "github.com/Financial-Times/go-fthealth/v1_1"
 	"github.com/Financial-Times/message-queue-go-producer/producer"
 	"github.com/Financial-Times/message-queue-gonsumer/consumer"
 	"github.com/Financial-Times/service-status-go/httphandlers"
 	tid "github.com/Financial-Times/transactionid-utils-go"
-	. "github.com/Financial-Times/upp-next-video-mapper/logger"
 	"github.com/gorilla/mux"
+
+	. "github.com/Financial-Times/upp-next-video-mapper/logger"
 )
 
 const videoSystemOrigin = "http://cmdb.ft.com/systems/next-video-editor"
@@ -21,19 +21,20 @@ type VideoMapperHandler struct {
 	videoMapper     VideoMapper
 }
 
-func NewVideoMapperHandler(producerConfig producer.MessageProducerConfig) VideoMapperHandler {
+func NewVideoMapperHandler(producerConfig producer.MessageProducerConfig, client *http.Client) VideoMapperHandler {
 	videoMapper := VideoMapper{}
-	messageProducer := producer.NewMessageProducer(producerConfig)
+	messageProducer := producer.NewMessageProducerWithHTTPClient(producerConfig, client)
 
 	return VideoMapperHandler{messageProducer, videoMapper}
 }
 
-func (v *VideoMapperHandler) Listen(hc *Healthcheck, port int) {
+func (v *VideoMapperHandler) Listen(hc *HealthCheck, port int) {
 	r := mux.NewRouter()
 	r.HandleFunc("/map", v.MapHandler).Methods("POST")
-	r.HandleFunc("/__health", fthealth.Handler(hc.Healthcheck()))
+	r.HandleFunc("/__health", hc.Health())
 	r.HandleFunc(httphandlers.BuildInfoPath, httphandlers.BuildInfoHandler)
 	r.HandleFunc(httphandlers.PingPath, httphandlers.PingHandler)
+	r.HandleFunc(httphandlers.GTGPath, httphandlers.NewGoodToGoHandler(hc.GTG))
 
 	http.Handle("/", r)
 	InfoLogger.Printf("Starting to listen on port [%d]", port)
@@ -84,6 +85,10 @@ func (v *VideoMapperHandler) MapHandler(w http.ResponseWriter, r *http.Request) 
 	if err != nil {
 		WarnLogger.Printf("%v - Writing response error: [%v]", transactionID, err)
 	}
+}
+
+func (v *VideoMapperHandler) GetProducer() producer.MessageProducer {
+	return v.messageProducer
 }
 
 func createConsumerMessageFromRequest(tid string, body []byte, r *http.Request) consumer.Message {
