@@ -7,6 +7,7 @@ import (
 	"github.com/Financial-Times/message-queue-go-producer/producer"
 	"github.com/Financial-Times/message-queue-gonsumer/consumer"
 	"github.com/Financial-Times/service-status-go/gtg"
+	"time"
 )
 
 type HealthCheck struct {
@@ -23,11 +24,14 @@ func NewHealthCheck(p producer.MessageProducer, c consumer.MessageConsumer) *Hea
 
 func (h *HealthCheck) Health() func(w http.ResponseWriter, r *http.Request) {
 	checks := []fthealth.Check{h.readQueueCheck(), h.writeQueueCheck()}
-	hc := fthealth.HealthCheck{
-		SystemCode:  "upp-next-video-mapper",
-		Name:        "Next Video Mapper",
-		Description: "Checks if all the dependent services are reachable and healthy.",
-		Checks:      checks,
+	hc := fthealth.TimedHealthCheck{
+		HealthCheck: fthealth.HealthCheck{
+			SystemCode:  "upp-next-video-mapper",
+			Name:        "Next Video Mapper",
+			Description: "Checks if all the dependent services are reachable and healthy.",
+			Checks:      checks,
+		},
+		Timeout: 10 * time.Second,
 	}
 	return fthealth.Handler(hc)
 }
