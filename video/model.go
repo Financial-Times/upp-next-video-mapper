@@ -36,6 +36,8 @@ type videoPayload struct {
 	PublishReference   string       `json:"publishReference,omitempty"`
 	CanBeSyndicated    string       `json:"canBeSyndicated,omitempty"`
 	AccessLevel        string       `json:"accessLevel,omitempty"`
+	WebUrl             string       `json:"webUrl,omitempty"`
+	CanonicalWebUrl    string		`json:"canonicalWebUrl,omitempty"`
 }
 
 type caption struct {
