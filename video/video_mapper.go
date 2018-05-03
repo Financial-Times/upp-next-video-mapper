@@ -13,20 +13,22 @@ import (
 	"github.com/Financial-Times/message-queue-go-producer/producer"
 	"github.com/Financial-Times/message-queue-gonsumer/consumer"
 	uuidUtils "github.com/Financial-Times/uuid-utils-go"
-	uuid "github.com/satori/go.uuid"
+	"github.com/satori/go.uuid"
 
 	. "github.com/Financial-Times/upp-next-video-mapper/logger"
 )
 
 const (
-	canBeDistributedYes = "yes"
-	videoType           = "Video"
-	videoContentURIBase = "http://next-video-mapper.svc.ft.com/video/model/"
-	videoAuthority      = "http://api.ft.com/system/NEXT-VIDEO-EDITOR"
-	ftBrandID           = "http://api.ft.com/things/dbb0bdae-1f0c-11e4-b0cb-b2227cce2b54"
-	dateFormat          = "2006-01-02T15:04:05.000Z0700"
-	defaultAccessLevel  = "free"
-	uuidGenerationSalt  = "storypackage"
+	canBeDistributedYes     = "yes"
+	videoType               = "Video"
+	videoContentURIBase     = "http://next-video-mapper.svc.ft.com/video/model/"
+	videoAuthority          = "http://api.ft.com/system/NEXT-VIDEO-EDITOR"
+	ftBrandID               = "http://api.ft.com/things/dbb0bdae-1f0c-11e4-b0cb-b2227cce2b54"
+	dateFormat              = "2006-01-02T15:04:05.000Z0700"
+	defaultAccessLevel      = "free"
+	uuidGenerationSalt      = "storypackage"
+	webUrlTemplate          = "https://www.ft.com/content/%s"
+	canonicalWebUrlTemplate = "https://www.ft.com/content/%s"
 )
 
 var uuidExtractRegex = regexp.MustCompile(".*/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$")
@@ -112,6 +114,9 @@ func getVideoModel(videoContent map[string]interface{}, uuid string, tid string,
 
 	accessLevel := getAccessLevel()
 
+	webUrl := fmt.Sprintf(webUrlTemplate, uuid)
+	canonicalWebUrl := fmt.Sprintf(canonicalWebUrlTemplate, uuid)
+
 	return &videoPayload{
 		Id:                 uuid,
 		Title:              title,
@@ -133,6 +138,8 @@ func getVideoModel(videoContent map[string]interface{}, uuid string, tid string,
 		PublishReference:   tid,
 		CanBeSyndicated:    canBeSyndicated,
 		AccessLevel:        accessLevel,
+		WebUrl:             webUrl,
+		CanonicalWebUrl:    canonicalWebUrl,
 	}
 }
 func getCanBeSyndicated(videoContent map[string]interface{}, tid string) string {

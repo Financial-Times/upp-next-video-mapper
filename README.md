@@ -96,7 +96,9 @@ You should receive a response body like:
 		"accessLevel": "free",
 		"type": "MediaResource",
 		"lastModified": "2017-04-13T10:27:32.353Z",
-		"publishReference": "tid_123123"
+		"publishReference": "tid_123123",
+		"webUrl": "https://www.ft.com/content/e2290d14-7e80-4db8-a715-949da4de9a07",
+		"canonicalWebUrl": "https://www.ft.com/content/e2290d14-7e80-4db8-a715-949da4de9a07"
 	},
 	"lastModified": "2017-04-13T10:27:32.353Z"
 }
