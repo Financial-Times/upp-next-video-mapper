@@ -22,7 +22,7 @@ func init() {
 func TestOnMessage_InvalidSystemId(t *testing.T) {
 	m := consumer.Message{
 		Headers: map[string]string{
-			"Origin-System-Id": "http://cmdb.ft.com/systems/next-video-editor",
+			"Origin-System-Id": "hasfsafaf",
 		},
 		Body: `{}`,
 	}
@@ -36,7 +36,7 @@ func TestOnMessage_SkipAudioContent(t *testing.T) {
 	m := consumer.Message{
 		Headers: map[string]string{
 			"Origin-System-Id": "http://cmdb.ft.com/systems/next-video-editor",
-			"Content-Type":     "audio",
+			"Content-Type":     "application/vnd.ft-upp-audio+json",
 		},
 		Body: `{}`,
 	}
