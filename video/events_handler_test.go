@@ -22,7 +22,21 @@ func init() {
 func TestOnMessage_InvalidSystemId(t *testing.T) {
 	m := consumer.Message{
 		Headers: map[string]string{
-			"Origin-System-Id": "jdhyhjsjsjsj",
+			"Origin-System-Id": "dsjajash",
+		},
+		Body: `{}`,
+	}
+
+	eventsHandler, mockMsgProducer := createEventsHandler()
+	eventsHandler.OnMessage(m)
+	assert.Equal(t, false, mockMsgProducer.sendCalled, "Producer message not expected to be generated when invalid Origin Id")
+}
+
+func TestOnMessage_SkipAudioContent(t *testing.T) {
+	m := consumer.Message{
+		Headers: map[string]string{
+			"Origin-System-Id": "http://cmdb.ft.com/systems/next-video-editor",
+			"Content-Type":     "audio",
 		},
 		Body: `{}`,
 	}

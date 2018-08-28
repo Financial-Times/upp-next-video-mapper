@@ -12,6 +12,7 @@ import (
 	"github.com/gorilla/mux"
 
 	. "github.com/Financial-Times/upp-next-video-mapper/logger"
+	"strings"
 )
 
 const videoSystemOrigin = "http://cmdb.ft.com/systems/next-video-editor"
@@ -46,23 +47,30 @@ func (v *VideoMapperHandler) Listen(hc *HealthCheck, port int) {
 
 func (v *VideoMapperHandler) OnMessage(m consumer.Message) {
 	transactionID := m.Headers["X-Request-Id"]
+	contentType := m.Headers["Content-Type"]
 	if m.Headers["Origin-System-Id"] != videoSystemOrigin {
 		InfoLogger.Printf("%v - Ignoring message with different Origin-System-Id %v", transactionID, m.Headers["Origin-System-Id"])
 		return
+	} else {
+		if strings.Contains(contentType, "application/json") {
+			videoMsg, contentUUID, err := v.videoMapper.TransformMsg(m)
+			if err != nil {
+				ErrorLogger.Printf("%v - Error consuming message: %v", transactionID, err)
+				return
+			}
+			err = (v.messageProducer).SendMessage("", videoMsg)
+			if err != nil {
+				ErrorLogger.Printf("%v - Error sending transformed message to queue: %v", transactionID, err)
+				return
+			}
+			InfoLogger.Printf("%v - Mapped and sent for uuid: %v", transactionID, contentUUID)
+		} else {
+			InfoLogger.Printf("%v - Ignoring message with contentType %v", transactionID, contentType)
+			return
+		}
 	}
-
-	videoMsg, contentUUID, err := v.videoMapper.TransformMsg(m)
-	if err != nil {
-		ErrorLogger.Printf("%v - Error consuming message: %v", transactionID, err)
-		return
-	}
-	err = (v.messageProducer).SendMessage("", videoMsg)
-	if err != nil {
-		ErrorLogger.Printf("%v - Error sending transformed message to queue: %v", transactionID, err)
-		return
-	}
-	InfoLogger.Printf("%v - Mapped and sent for uuid: %v", transactionID, contentUUID)
 }
+
 
 func (v *VideoMapperHandler) MapHandler(w http.ResponseWriter, r *http.Request) {
 	transactionID := tid.GetTransactionIDFromRequest(r)
