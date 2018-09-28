@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/Financial-Times/message-queue-go-producer/producer"
 	"github.com/Financial-Times/message-queue-gonsumer/consumer"
@@ -50,18 +51,23 @@ func (v *VideoMapperHandler) OnMessage(m consumer.Message) {
 		InfoLogger.Printf("%v - Ignoring message with different Origin-System-Id %v", transactionID, m.Headers["Origin-System-Id"])
 		return
 	}
-
-	videoMsg, contentUUID, err := v.videoMapper.TransformMsg(m)
-	if err != nil {
-		ErrorLogger.Printf("%v - Error consuming message: %v", transactionID, err)
+	contentType := m.Headers["Content-Type"]
+	if strings.Contains(contentType, "application/json") {
+		videoMsg, contentUUID, err := v.videoMapper.TransformMsg(m)
+		if err != nil {
+			ErrorLogger.Printf("%v - Error consuming message: %v", transactionID, err)
+			return
+		}
+		err = (v.messageProducer).SendMessage("", videoMsg)
+		if err != nil {
+			ErrorLogger.Printf("%v - Error sending transformed message to queue: %v", transactionID, err)
+			return
+		}
+		InfoLogger.Printf("%v - Mapped and sent for uuid: %v", transactionID, contentUUID)
+	} else {
+		InfoLogger.Printf("%v - Ignoring message with contentType %v", transactionID, contentType)
 		return
 	}
-	err = (v.messageProducer).SendMessage("", videoMsg)
-	if err != nil {
-		ErrorLogger.Printf("%v - Error sending transformed message to queue: %v", transactionID, err)
-		return
-	}
-	InfoLogger.Printf("%v - Mapped and sent for uuid: %v", transactionID, contentUUID)
 }
 
 func (v *VideoMapperHandler) MapHandler(w http.ResponseWriter, r *http.Request) {
