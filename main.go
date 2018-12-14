@@ -14,12 +14,17 @@ import (
 	"github.com/Financial-Times/message-queue-gonsumer/consumer"
 	"github.com/jawher/mow.cli"
 
-	. "github.com/Financial-Times/upp-next-video-mapper/logger"
+	"github.com/Financial-Times/go-logger"
 	"github.com/Financial-Times/upp-next-video-mapper/video"
 )
 
+const (
+	serviceName        = "next-video-mapper"
+	serviceDescription = "Catch native video content transform into Content and send back to queue."
+)
+
 func main() {
-	app := cli.App("next-video-mapper", "Catch native video content transform into Content and send back to queue.")
+	app := cli.App(serviceName, serviceDescription)
 
 	addresses := app.Strings(cli.StringsOpt{
 		Name:   "queue-addresses",
@@ -70,11 +75,12 @@ func main() {
 		EnvVar: "PORT",
 	})
 
+	logger.InitDefaultLogger(serviceName)
+
 	app.Action = func() {
-		InitLogs(os.Stdout, os.Stdout, os.Stderr)
 
 		if len(*addresses) == 0 {
-			ErrorLogger.Println("No queue address provided. Quitting...")
+			logger.Error("No queue address provided. Quitting...")
 			cli.Exit(1)
 		}
 
@@ -110,7 +116,7 @@ func main() {
 
 		handler := video.NewVideoMapperHandler(producerConfig, httpClient)
 		messageConsumer := consumer.NewConsumer(consumerConfig, handler.OnMessage, httpClient)
-		InfoLogger.Println(prettyPrintConfig(consumerConfig, producerConfig))
+		logger.Info(prettyPrintConfig(consumerConfig, producerConfig))
 
 		hc := video.NewHealthCheck(handler.GetProducer(), messageConsumer)
 
@@ -125,7 +131,7 @@ func main() {
 }
 
 func consumeUntilSigterm(messageConsumer consumer.MessageConsumer) {
-	InfoLogger.Printf("Starting queue consumer: %#v", messageConsumer)
+	logger.Infof("Starting queue consumer: %#v", messageConsumer)
 	var consumerWaitGroup sync.WaitGroup
 	consumerWaitGroup.Add(1)
 
