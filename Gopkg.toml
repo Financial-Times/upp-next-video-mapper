@@ -56,3 +56,7 @@
 [prune]
   go-tests = true
   unused-packages = true
+
+[[constraint]]
+  name = "github.com/Financial-Times/go-logger"
+  version = "1.0.0"

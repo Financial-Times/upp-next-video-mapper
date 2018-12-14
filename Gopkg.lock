@@ -10,6 +10,14 @@
   version = "0.4.0"
 
 [[projects]]
+  digest = "1:ed7764f833c69827c95ecc7df89e6dd562b2663941f952f82c43dbac3d35c29e"
+  name = "github.com/Financial-Times/go-logger"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "febee6537e90971bab6f6fe60b71b4a0562dcab3"
+  version = "1.0.0"
+
+[[projects]]
   digest = "1:662ea14fe7a0dc09fa8644987d69f283e7bf295b890129d347a0d14bb882019a"
   name = "github.com/Financial-Times/message-queue-go-producer"
   packages = ["producer"]
@@ -91,6 +99,14 @@
   revision = "0de3d3b4ed00f261460d12ecde4efa90fbfcd8ed"
 
 [[projects]]
+  digest = "1:0a69a1c0db3591fcefb47f115b224592c8dfa4368b7ba9fae509d5e16cdc95c8"
+  name = "github.com/konsorten/go-windows-terminal-sequences"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "5c8c8bd35d3832f5d134ae1e1e375b69a4d25242"
+  version = "v1.0.1"
+
+[[projects]]
   digest = "1:08413c4235cad94a96c39e1e2f697789733c4a87d1fdf06b412d2cf2ba49826a"
   name = "github.com/pmezard/go-difflib"
   packages = ["difflib"]
@@ -103,6 +119,14 @@
   packages = ["."]
   pruneopts = "UT"
   revision = "b061729afc07e77a8aa4fad0a2fd840958f1942a"
+
+[[projects]]
+  digest = "1:69b1cc331fca23d702bd72f860c6a647afd0aa9fcbc1d0659b1365e26546dd70"
+  name = "github.com/sirupsen/logrus"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "bcd833dfe83d3cebad139e4a29ed79cb2318bf95"
+  version = "v1.2.0"
 
 [[projects]]
   digest = "1:b566bbc018497ffb47060cab752ed1b899dea649c9cf1c6b54ae13b4f81f4d10"
@@ -120,17 +144,37 @@
   version = "v1.1.2"
 
 [[projects]]
+  branch = "master"
+  digest = "1:38f553aff0273ad6f367cb0a0f8b6eecbaef8dc6cb8b50e57b6a81c1d5b1e332"
+  name = "golang.org/x/crypto"
+  packages = ["ssh/terminal"]
+  pruneopts = "UT"
+  revision = "505ab145d0a99da450461ae2c1a9f6cd10d1f447"
+
+[[projects]]
   digest = "1:137a07d176f06db21c807d085339244f6a58ddac7d4f2fe5607a39392a2dcb5a"
   name = "golang.org/x/net"
   packages = ["context"]
   pruneopts = "UT"
   revision = "236b8f043b920452504e263bc21d354427127473"
 
+[[projects]]
+  branch = "master"
+  digest = "1:ba8cbf57cfd92d5f8592b4aca1a35d92c162363d32aeabd5b12555f8896635e7"
+  name = "golang.org/x/sys"
+  packages = [
+    "unix",
+    "windows",
+  ]
+  pruneopts = "UT"
+  revision = "4d1cda033e0619309c606fc686de3adcf599539e"
+
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
     "github.com/Financial-Times/go-fthealth/v1_1",
+    "github.com/Financial-Times/go-logger",
     "github.com/Financial-Times/message-queue-go-producer/producer",
     "github.com/Financial-Times/message-queue-gonsumer/consumer",
     "github.com/Financial-Times/service-status-go/gtg",
