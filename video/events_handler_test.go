@@ -1,6 +1,9 @@
 package video
 
 import (
+	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"testing"
 
@@ -17,6 +20,23 @@ type mockMessageProducer struct {
 
 func init() {
 	InitLogs(os.Stdout, os.Stdout, os.Stderr)
+}
+
+func TestNewVideoMapperHandler(t *testing.T) {
+	s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintln(w, "Pronto")
+	}))
+
+	cfg := producer.MessageProducerConfig{
+		Addr:          "localhost:3000",
+		Topic:         "writeTopic",
+		Queue:         "writeQueue",
+		Authorization: "authorization",
+	}
+
+	handler := NewVideoMapperHandler(cfg, s.Client())
+	assert.NotNil(t, handler.messageProducer, "Message producer should be set")
+	assert.NotNil(t, handler.videoMapper, "Video mapper should be set")
 }
 
 func TestOnMessage_InvalidSystemId(t *testing.T) {
@@ -89,6 +109,7 @@ func TestOnMessage_Success(t *testing.T) {
 	assert.Equal(t, videoOutput, mockMsgProducer.message)
 }
 
+
 func (mock *mockMessageProducer) SendMessage(uuid string, message producer.Message) error {
 	mock.message = message.Body
 	mock.sendCalled = true
@@ -109,3 +130,4 @@ func createEventsHandler() (*VideoMapperHandler, *mockMessageProducer) {
 
 	return &VideoMapperHandler{msgProducer, VideoMapper{}}, &mockMsgProducer
 }
+
