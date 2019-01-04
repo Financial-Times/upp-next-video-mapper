@@ -48,12 +48,11 @@ func TestMapHandler_InvalidBody(t *testing.T) {
 
 	res := httptest.NewRecorder()
 
-	eventsHandler,_ := createEventsHandler()
+	eventsHandler, _ := createEventsHandler()
 
 	r := mux.NewRouter()
 	r.HandleFunc("/map", eventsHandler.MapHandler).Methods("POST")
 	r.ServeHTTP(res, req)
-
 
 	assert.Equal(t, http.StatusBadRequest, res.Code, "Unexpected status code")
 }
@@ -112,7 +111,7 @@ func TestOnMessage_Success(t *testing.T) {
 			"X-Request-Id":      xRequestId,
 			"Origin-System-Id":  videoSystemOrigin,
 			"Message-Timestamp": messageTimestamp,
-			"Content-Type": "application/json",
+			"Content-Type":      "application/json",
 		},
 		Body: videoInput,
 	}
@@ -127,7 +126,6 @@ func TestOnMessage_Success(t *testing.T) {
 	}
 	assert.Equal(t, videoOutput, mockMsgProducer.message)
 }
-
 
 func (mock *mockMessageProducer) SendMessage(uuid string, message producer.Message) error {
 	mock.message = message.Body
@@ -149,4 +147,3 @@ func createEventsHandler() (*VideoMapperHandler, *mockMessageProducer) {
 
 	return &VideoMapperHandler{msgProducer, VideoMapper{}}, &mockMsgProducer
 }
-
