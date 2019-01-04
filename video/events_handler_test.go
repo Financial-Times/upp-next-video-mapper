@@ -2,6 +2,7 @@ package video
 
 import (
 	"fmt"
+	"github.com/gorilla/mux"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -37,6 +38,24 @@ func TestNewVideoMapperHandler(t *testing.T) {
 	handler := NewVideoMapperHandler(cfg, s.Client())
 	assert.NotNil(t, handler.messageProducer, "Message producer should be set")
 	assert.NotNil(t, handler.videoMapper, "Video mapper should be set")
+}
+
+func TestMapHandler_InvalidBody(t *testing.T) {
+	req, err := http.NewRequest("POST", "/map", http.NoBody)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	res := httptest.NewRecorder()
+
+	eventsHandler,_ := createEventsHandler()
+
+	r := mux.NewRouter()
+	r.HandleFunc("/map", eventsHandler.MapHandler).Methods("POST")
+	r.ServeHTTP(res, req)
+
+
+	assert.Equal(t, http.StatusBadRequest, res.Code, "Unexpected status code")
 }
 
 func TestOnMessage_InvalidSystemId(t *testing.T) {
