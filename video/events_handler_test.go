@@ -1,7 +1,6 @@
 package video
 
 import (
-	"fmt"
 	"github.com/gorilla/mux"
 	"net/http"
 	"net/http/httptest"
@@ -25,7 +24,6 @@ func init() {
 
 func TestNewVideoMapperHandler(t *testing.T) {
 	s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintln(w, "Pronto")
 	}))
 
 	cfg := producer.MessageProducerConfig{
