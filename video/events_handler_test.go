@@ -1,16 +1,51 @@
 package video
 
 import (
-	"testing"
-
 	"github.com/Financial-Times/message-queue-go-producer/producer"
 	"github.com/Financial-Times/message-queue-gonsumer/consumer"
+	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
+	"net/http"
+	"net/http/httptest"
+	"testing"
 )
 
 type mockMessageProducer struct {
 	message    string
 	sendCalled bool
+}
+
+func TestNewVideoMapperHandler(t *testing.T) {
+	s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	}))
+
+	cfg := producer.MessageProducerConfig{
+		Addr:          "localhost:3000",
+		Topic:         "writeTopic",
+		Queue:         "writeQueue",
+		Authorization: "authorization",
+	}
+
+	handler := NewVideoMapperHandler(cfg, s.Client())
+	assert.NotNil(t, handler.messageProducer, "Message producer should be set")
+	assert.NotNil(t, handler.videoMapper, "Video mapper should be set")
+}
+
+func TestMapHandler_InvalidBody(t *testing.T) {
+	req, err := http.NewRequest("POST", "/map", http.NoBody)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	res := httptest.NewRecorder()
+
+	eventsHandler, _ := createEventsHandler()
+
+	r := mux.NewRouter()
+	r.HandleFunc("/map", eventsHandler.MapHandler).Methods("POST")
+	r.ServeHTTP(res, req)
+
+	assert.Equal(t, http.StatusBadRequest, res.Code, "Unexpected status code")
 }
 
 func TestOnMessage_InvalidSystemId(t *testing.T) {
