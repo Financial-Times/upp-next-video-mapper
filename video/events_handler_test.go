@@ -1,25 +1,18 @@
 package video
 
 import (
-	"github.com/gorilla/mux"
-	"net/http"
-	"net/http/httptest"
-	"os"
-	"testing"
-
 	"github.com/Financial-Times/message-queue-go-producer/producer"
 	"github.com/Financial-Times/message-queue-gonsumer/consumer"
-	. "github.com/Financial-Times/upp-next-video-mapper/logger"
+	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
+	"net/http"
+	"net/http/httptest"
+	"testing"
 )
 
 type mockMessageProducer struct {
 	message    string
 	sendCalled bool
-}
-
-func init() {
-	InitLogs(os.Stdout, os.Stdout, os.Stderr)
 }
 
 func TestNewVideoMapperHandler(t *testing.T) {
