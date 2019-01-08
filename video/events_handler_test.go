@@ -1,22 +1,16 @@
 package video
 
 import (
-	"os"
 	"testing"
 
 	"github.com/Financial-Times/message-queue-go-producer/producer"
 	"github.com/Financial-Times/message-queue-gonsumer/consumer"
-	. "github.com/Financial-Times/upp-next-video-mapper/logger"
 	"github.com/stretchr/testify/assert"
 )
 
 type mockMessageProducer struct {
 	message    string
 	sendCalled bool
-}
-
-func init() {
-	InitLogs(os.Stdout, os.Stdout, os.Stderr)
 }
 
 func TestOnMessage_InvalidSystemId(t *testing.T) {
@@ -73,7 +67,7 @@ func TestOnMessage_Success(t *testing.T) {
 			"X-Request-Id":      xRequestId,
 			"Origin-System-Id":  videoSystemOrigin,
 			"Message-Timestamp": messageTimestamp,
-			"Content-Type": "application/json",
+			"Content-Type":      "application/json",
 		},
 		Body: videoInput,
 	}

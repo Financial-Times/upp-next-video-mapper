@@ -14,7 +14,7 @@ In order to install, execute the following steps:
 go get -u github.com/kardianos/govendor
 go get -u github.com/Financial-Times/upp-next-video-mapper
 cd $GOPATH/src/github.com/Financial-Times/upp-next-video-mapper
-govendor sync
+dep ensure -vendor-only
 go build .
 ```
 

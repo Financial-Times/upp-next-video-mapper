@@ -15,7 +15,7 @@ import (
 	uuidUtils "github.com/Financial-Times/uuid-utils-go"
 	"github.com/satori/go.uuid"
 
-	. "github.com/Financial-Times/upp-next-video-mapper/logger"
+	"github.com/Financial-Times/go-logger"
 )
 
 const (
@@ -80,25 +80,25 @@ func getVideoModel(videoContent map[string]interface{}, uuid string, tid string,
 	firstPublishDate, _ := get("firstPublishedAt", videoContent)
 	publishedDate, _ := get("publishedAt", videoContent)
 
-	mainImage, err := getMainImage(videoContent, tid, uuid)
+	mainImage, err := getMainImage(videoContent)
 	if err != nil {
-		WarnLogger.Println(fmt.Errorf("%v - Extract main image: %v", tid, err))
+		logger.Warnf("%v - Extract main image: %v", tid, err)
 	}
 
-	storyPackageUuid, err := getStoryPackageUUID(videoContent, tid, uuid)
+	storyPackageUuid, err := getStoryPackageUUID(videoContent, uuid)
 	if err != nil {
-		WarnLogger.Println(fmt.Errorf("%v - Extract story package: %v", tid, err))
+		logger.Warnf("%v - Extract story package: %v", tid, err)
 	}
 
 	transcriptionMap, transcript, err := getTranscript(videoContent, uuid)
 	if err != nil {
-		WarnLogger.Println(fmt.Errorf("%v - %v", tid, err))
+		logger.Warnf("%v - %v", tid, err)
 	}
 
 	captionsList := getCaptions(transcriptionMap)
 	dataSources, err := getDataSources(videoContent["encoding"])
 	if err != nil {
-		WarnLogger.Println(fmt.Errorf("%v - %v", tid, err))
+		logger.Warnf("%v - %v", tid, err)
 	}
 
 	canBeSyndicated := getCanBeSyndicated(videoContent, tid)
@@ -145,7 +145,7 @@ func getVideoModel(videoContent map[string]interface{}, uuid string, tid string,
 func getCanBeSyndicated(videoContent map[string]interface{}, tid string) string {
 	canBeSyndicated, err := getBool("canBeSyndicated", videoContent)
 	if err != nil {
-		WarnLogger.Println(fmt.Errorf("%v - %v. Defaulting value to true", tid, err))
+		logger.Warnf("%v - %v. Defaulting value to true", tid, err)
 		canBeSyndicated = true
 	}
 	switch canBeSyndicated {
@@ -156,7 +156,7 @@ func getCanBeSyndicated(videoContent map[string]interface{}, tid string) string 
 	}
 }
 
-func getMainImage(videoContent map[string]interface{}, tid string, uuid string) (string, error) {
+func getMainImage(videoContent map[string]interface{}) (string, error) {
 	imageURI, err := get("image", videoContent)
 	if err != nil {
 		return "", err
@@ -177,19 +177,19 @@ func getMainImage(videoContent map[string]interface{}, tid string, uuid string) 
 	return mainImageSetUUID.String(), nil
 }
 
-func getStoryPackageUUID(videoContent map[string]interface{}, tid string, videoUUID string) (string, error) {
+func getStoryPackageUUID(videoContent map[string]interface{}, videoUUID string) (string, error) {
 	_, ok := videoContent["related"]
 	if !ok {
 		return "", fmt.Errorf("Related content is null and will be skipped for uuid: %v", videoUUID)
 	}
 
-	uuid, err := uuidUtils.NewUUIDFromString(videoUUID)
+	vUUID, err := uuidUtils.NewUUIDFromString(videoUUID)
 	if err != nil {
 		return "", err
 	}
 
 	uuidDeriver := uuidUtils.NewUUIDDeriverWith(uuidGenerationSalt)
-	storyPackageUUID, err := uuidDeriver.From(uuid)
+	storyPackageUUID, err := uuidDeriver.From(vUUID)
 	if err != nil {
 		return "", err
 	}
@@ -298,7 +298,7 @@ func buildAndMarshalPublicationEvent(p *videoPayload, contentURI, lastModified, 
 
 	marshalledEvent, err := unsafeJSONMarshal(e)
 	if err != nil {
-		WarnLogger.Printf("%v - Couldn't marshall event %v, skipping message.", pubRef, e)
+		logger.Warnf("%v - Couldn't marshall event %v, skipping message.", pubRef, e)
 		return producer.Message{}, err
 	}
 
