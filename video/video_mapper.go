@@ -23,7 +23,6 @@ const (
 	videoType               = "Video"
 	videoContentURIBase     = "http://next-video-mapper.svc.ft.com/video/model/"
 	videoAuthority          = "http://api.ft.com/system/NEXT-VIDEO-EDITOR"
-	ftBrandID               = "http://api.ft.com/things/dbb0bdae-1f0c-11e4-b0cb-b2227cce2b54"
 	dateFormat              = "2006-01-02T15:04:05.000Z0700"
 	defaultAccessLevel      = "free"
 	uuidGenerationSalt      = "storypackage"
@@ -108,10 +107,6 @@ func getVideoModel(videoContent map[string]interface{}, uuid string, tid string,
 		IdentifierValue: uuid,
 	}
 
-	b := brand{
-		ID: ftBrandID,
-	}
-
 	accessLevel := getAccessLevel()
 
 	webUrl := fmt.Sprintf(webUrlTemplate, uuid)
@@ -124,7 +119,6 @@ func getVideoModel(videoContent map[string]interface{}, uuid string, tid string,
 		Description:        description,
 		Byline:             byline,
 		Identifiers:        []identifier{i},
-		Brands:             []brand{b},
 		FirstPublishedDate: firstPublishDate,
 		PublishedDate:      publishedDate,
 		MainImage:          mainImage,

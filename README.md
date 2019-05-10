@@ -58,9 +58,6 @@ You should receive a response body like:
 			"authority": "http://api.ft.com/system/NEXT-VIDEO-EDITOR",
 			"identifierValue": "e2290d14-7e80-4db8-a715-949da4de9a07"
 		}],
-		"brands": [{
-			"id": "http://api.ft.com/things/dbb0bdae-1f0c-11e4-b0cb-b2227cce2b54"
-		}],
 		"mainImage": "ffc60243-2b77-439a-38af-98acd99af4ca",
 		"transcript": "<p>Here's what we're watching with trading underway in London. Global equities under pressure led by weaker commodities and financials as investors scrutinise the viability of the Trump trade. The dollar is weaker. Havens like yen, gold, and government bonds finding buyers. </p><p>As the dust settles over the failure to replace Obamacare, focus now on whether tax reform and other fiscal measures will eventuate. This is where the rubber meets the road for the Trump trade. High flying equity markets had been underpinned by the promise of big tax cuts and fiscal stimulus. And Wall Street is souring. </p><p>One big beneficiary of lower corporate taxes under Trump are small caps. They are now down 2 and 1/2% for the year. While the sector is still much higher since November, this is a key market barometer of prospects for the Trump trade. </p><p>Now while many still think some measure of tax reform or spending will eventuate, markets are very wary, namely of the risk that Congress and the Trump administration fail to reach agreement on legislation, that unlike health care reform, matters a great deal more to investors. </p><p>[MUSIC PLAYING] </p>",
 		"captions": [{

@@ -11,10 +11,6 @@ type identifier struct {
 	IdentifierValue string `json:"identifierValue"`
 }
 
-type brand struct {
-	ID string `json:"id"`
-}
-
 type videoPayload struct {
 	Id                 string       `json:"uuid,omitempty"`
 	Title              string       `json:"title,omitempty"`
@@ -22,7 +18,6 @@ type videoPayload struct {
 	Description        string       `json:"description,omitempty"`
 	Byline             string       `json:"byline,omitempty"`
 	Identifiers        []identifier `json:"identifiers,omitempty"`
-	Brands             []brand      `json:"brands,omitempty"`
 	FirstPublishedDate string       `json:"firstPublishedDate,omitempty"`
 	PublishedDate      string       `json:"publishedDate,omitempty"`
 	MainImage          string       `json:"mainImage,omitempty"`
