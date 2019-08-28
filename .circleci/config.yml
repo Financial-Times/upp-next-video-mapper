@@ -3,7 +3,7 @@ jobs:
   build:
     working_directory: /go/src/github.com/Financial-Times/upp-next-video-mapper
     docker:
-      - image: golang:1.11
+      - image: golang:1
         environment:
           GOPATH: /go
           CIRCLE_TEST_REPORTS: /tmp/test-results
