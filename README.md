@@ -9,12 +9,10 @@ We currently support videos created and published in Next Video Editor, that get
 Next Video Mapper is able to process messages for both publish and unpublish events.
 
 ## Installation
-In order to install, execute the following steps:
+Download the source code, dependencies and test dependencies:
 ```
-go get -u github.com/kardianos/govendor
 go get -u github.com/Financial-Times/upp-next-video-mapper
 cd $GOPATH/src/github.com/Financial-Times/upp-next-video-mapper
-dep ensure -vendor-only
 go build .
 ```
 
