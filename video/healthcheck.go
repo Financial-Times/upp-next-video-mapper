@@ -44,7 +44,7 @@ func (h *HealthCheck) readQueueCheck() fthealth.Check {
 		Severity:         2,
 		BusinessImpact:   "Publishing or updating videos will not be possible, clients will not see the new content.",
 		TechnicalSummary: "Read message queue proxy is not reachable/healthy",
-		PanicGuide:       "https://dewey.ft.com/up-vm.html",
+		PanicGuide:       "https://runbooks.in.ft.com/next-video-mapper",
 		Checker:          h.consumer.ConnectivityCheck,
 	}
 }
@@ -56,7 +56,7 @@ func (h *HealthCheck) writeQueueCheck() fthealth.Check {
 		Severity:         2,
 		BusinessImpact:   "Publishing or updating videos will not be possible, clients will not see the new content.",
 		TechnicalSummary: "Write message queue proxy is not reachable/healthy",
-		PanicGuide:       "https://dewey.ft.com/up-vm.html",
+		PanicGuide:       "https://runbooks.in.ft.com/next-video-mapper",
 		Checker:          h.producer.ConnectivityCheck,
 	}
 }
