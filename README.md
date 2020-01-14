@@ -11,7 +11,7 @@ Next Video Mapper is able to process messages for both publish and unpublish eve
 ## Installation
 Download the source code, dependencies and test dependencies:
 ```
-go get -u github.com/Financial-Times/upp-next-video-mapper
+go get github.com/Financial-Times/upp-next-video-mapper
 cd $GOPATH/src/github.com/Financial-Times/upp-next-video-mapper
 go build .
 ```

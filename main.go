@@ -10,12 +10,13 @@ import (
 	"syscall"
 	"time"
 
+	logger2 "github.com/Financial-Times/go-logger/v2"
 	"github.com/Financial-Times/message-queue-go-producer/producer"
-	"github.com/Financial-Times/message-queue-gonsumer/consumer"
-	"github.com/jawher/mow.cli"
+	consumer "github.com/Financial-Times/message-queue-gonsumer"
+	cli "github.com/jawher/mow.cli"
 
 	"github.com/Financial-Times/go-logger"
-	"github.com/Financial-Times/upp-next-video-mapper/video"
+	"github.com/Financial-Times/upp-next-video-mapper/v2/video"
 )
 
 const (
@@ -75,10 +76,15 @@ func main() {
 		EnvVar: "PORT",
 	})
 
-	logger.InitDefaultLogger(serviceName)
+	logLevel := app.String(cli.StringOpt{
+		Name:   "logLevel",
+		Value:  "INFO",
+		Desc:   "Logging level (DEBUG, INFO, WARN, ERROR)",
+		EnvVar: "LOG_LEVEL",
+	})
 
 	app.Action = func() {
-
+		logger.InitLogger(serviceName, *logLevel)
 		if len(*addresses) == 0 {
 			logger.Error("No queue address provided. Quitting...")
 			cli.Exit(1)
@@ -115,7 +121,9 @@ func main() {
 		}
 
 		handler := video.NewVideoMapperHandler(producerConfig, httpClient)
-		messageConsumer := consumer.NewConsumer(consumerConfig, handler.OnMessage, httpClient)
+		logConf := logger2.KeyNamesConfig{KeyTime: "@time"}
+		l := logger2.NewUPPLogger(serviceName, *logLevel, logConf)
+		messageConsumer := consumer.NewConsumer(consumerConfig, handler.OnMessage, httpClient, l)
 		logger.Info(prettyPrintConfig(consumerConfig, producerConfig))
 
 		hc := video.NewHealthCheck(handler.GetProducer(), messageConsumer)

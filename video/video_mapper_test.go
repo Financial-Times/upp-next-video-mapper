@@ -5,7 +5,7 @@ import (
 	"io/ioutil"
 	"testing"
 
-	"github.com/Financial-Times/message-queue-gonsumer/consumer"
+	consumer "github.com/Financial-Times/message-queue-gonsumer"
 	"github.com/stretchr/testify/assert"
 )
 

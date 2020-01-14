@@ -1,13 +1,14 @@
 package video
 
 import (
-	"github.com/Financial-Times/message-queue-go-producer/producer"
-	"github.com/Financial-Times/message-queue-gonsumer/consumer"
-	"github.com/gorilla/mux"
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/Financial-Times/message-queue-go-producer/producer"
+	consumer "github.com/Financial-Times/message-queue-gonsumer"
+	"github.com/gorilla/mux"
+	"github.com/stretchr/testify/assert"
 )
 
 type mockMessageProducer struct {

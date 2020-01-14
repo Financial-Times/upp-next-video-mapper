@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/Financial-Times/message-queue-go-producer/producer"
-	"github.com/Financial-Times/message-queue-gonsumer/consumer"
+	consumer "github.com/Financial-Times/message-queue-gonsumer"
 	"github.com/Financial-Times/service-status-go/httphandlers"
 	tid "github.com/Financial-Times/transactionid-utils-go"
 	"github.com/gorilla/mux"

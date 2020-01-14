@@ -11,9 +11,9 @@ import (
 	"time"
 
 	"github.com/Financial-Times/message-queue-go-producer/producer"
-	"github.com/Financial-Times/message-queue-gonsumer/consumer"
+	consumer "github.com/Financial-Times/message-queue-gonsumer"
 	uuidUtils "github.com/Financial-Times/uuid-utils-go"
-	"github.com/satori/go.uuid"
+	uuid "github.com/satori/go.uuid"
 
 	"github.com/Financial-Times/go-logger"
 )
