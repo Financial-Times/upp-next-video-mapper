@@ -1,0 +1,10 @@
+# Values used for the deployed application.
+replicaCount: 2
+service:
+  name: upp-next-video-mapper
+eksCluster: true
+env:
+  APP_NAME: next-video-mapper
+  Q_GROUP: nextVideoMapper
+  Q_READ_TOPIC: NativeCmsPublicationEvents
+  Q_WRITE_TOPIC: CmsPublicationEvents
