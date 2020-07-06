@@ -4,18 +4,16 @@
 # Next Video Mapper
 Next Video Mapper is responsible for listening for new video events, then transforming it to a structure amenable to processing by UPP and putting this structure back on the queue.
 
-We currently support videos created and published in Next Video Editor, that get into our stack through Cms-Notifier. In order to be processed by Next Video Mapper, a video content *MUST* include the header `X-Origin-Id=next-video-editor`
+We currently support videos created and published in Next Video Editor, that get into our stack through Cms-Notifier. In order to be processed by Next Video Mapper, a video content *MUST* include the header `X-Origin-Id=next-video-editor` .
 
-Next Video Mapper is able to process messages for both publish and unpublish events.
+Next Video Mapper is able to process messages for both publish and un-publish events.
 
 ## Installation
 In order to install, execute the following steps:
 ```
-go get -u github.com/kardianos/govendor
 go get -u github.com/Financial-Times/upp-next-video-mapper
 cd $GOPATH/src/github.com/Financial-Times/upp-next-video-mapper
-dep ensure -vendor-only
-go build .
+go build -mod=readonly .
 ```
 
 ## Running Locally
@@ -33,9 +31,15 @@ go build .
 ./upp-next-video-mapper
 ```
 
+## Running Test
+
+```
+go test -mod=readonly -race ./...
+```
+
 ## Expected behaviour 
 
-A transformation from a native video JSON to a UPP video content. The event is triggered when an video will be published/deleted from Next Video Editor.
+A transformation from a native video JSON to a UPP video content. The event is triggered when a video will be published/deleted from Next Video Editor.
 
 The mapper reads events from the NativeCmsPublicationEvents topic and sends the transformed package to the CmsPublicationEvents topic. 
 
@@ -104,7 +108,7 @@ You should receive a response body like:
 }
 ```
 
-### Unpublish/delete event
+### Un-publish/delete event
 The request body should have the following format:
 ```json
 {
