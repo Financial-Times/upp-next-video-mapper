@@ -115,7 +115,11 @@ func TestOnMessage_Success(t *testing.T) {
 	if err != nil {
 		assert.FailNow(t, err.Error(), "Output data for test cannot be loaded from external file")
 	}
-	assert.Equal(t, videoOutput, mockMsgProducer.message)
+
+	videoOutputStruct, resultMsgStruct, err := mapStringToPublicationEvent(videoOutput, mockMsgProducer.message)
+	if assert.NoError(t, err, "Error mapping string") {
+		assert.Equal(t, videoOutputStruct, resultMsgStruct)
+	}
 }
 
 func (mock *mockMessageProducer) SendMessage(uuid string, message producer.Message) error {

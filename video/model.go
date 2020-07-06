@@ -16,28 +16,30 @@ type brand struct {
 }
 
 type videoPayload struct {
-	Id                 string       `json:"uuid,omitempty"`
-	Title              string       `json:"title,omitempty"`
-	Standfirst         string       `json:"standfirst,omitempty"`
-	Description        string       `json:"description,omitempty"`
-	Byline             string       `json:"byline,omitempty"`
-	Identifiers        []identifier `json:"identifiers,omitempty"`
-	Brands             []brand      `json:"brands,omitempty"`
-	FirstPublishedDate string       `json:"firstPublishedDate,omitempty"`
-	PublishedDate      string       `json:"publishedDate,omitempty"`
-	MainImage          string       `json:"mainImage,omitempty"`
-	StoryPackage       string       `json:"storyPackage,omitempty"`
-	Transcript         string       `json:"transcript,omitempty"`
-	Captions           []caption    `json:"captions,omitempty"`
-	DataSources        []dataSource `json:"dataSource,omitempty"`
-	CanBeDistributed   string       `json:"canBeDistributed,omitempty"`
-	Type               string       `json:"type,omitempty"`
-	LastModified       string       `json:"lastModified,omitempty"`
-	PublishReference   string       `json:"publishReference,omitempty"`
-	CanBeSyndicated    string       `json:"canBeSyndicated,omitempty"`
-	AccessLevel        string       `json:"accessLevel,omitempty"`
-	WebUrl             string       `json:"webUrl,omitempty"`
-	CanonicalWebUrl    string       `json:"canonicalWebUrl,omitempty"`
+	ID                    string       `json:"uuid,omitempty"`
+	Title                 string       `json:"title,omitempty"`
+	Standfirst            string       `json:"standfirst,omitempty"`
+	Description           string       `json:"description,omitempty"`
+	Byline                string       `json:"byline,omitempty"`
+	Identifiers           []identifier `json:"identifiers,omitempty"`
+	Brands                []brand      `json:"brands,omitempty"`
+	FirstPublishedDate    string       `json:"firstPublishedDate,omitempty"`
+	PublishedDate         string       `json:"publishedDate,omitempty"`
+	MainImage             string       `json:"mainImage,omitempty"`
+	StoryPackage          string       `json:"storyPackage,omitempty"`
+	Transcript            string       `json:"transcript,omitempty"`
+	Captions              []caption    `json:"captions,omitempty"`
+	DataSources           []dataSource `json:"dataSource,omitempty"`
+	CanBeDistributed      string       `json:"canBeDistributed,omitempty"`
+	Type                  string       `json:"type,omitempty"`
+	LastModified          string       `json:"lastModified,omitempty"`
+	PublishReference      string       `json:"publishReference,omitempty"`
+	CanBeSyndicated       string       `json:"canBeSyndicated,omitempty"`
+	AccessLevel           string       `json:"accessLevel,omitempty"`
+	WebURL                string       `json:"webUrl,omitempty"`
+	CanonicalWebURL       string       `json:"canonicalWebUrl,omitempty"`
+	PromotionalTitle      string       `json:"promotionalTitle,omitempty"`
+	PromotionalStandfirst string       `json:"promotionalStandfirst,omitempty"`
 }
 
 type caption struct {

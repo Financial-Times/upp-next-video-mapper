@@ -39,7 +39,7 @@ type VideoMapper struct {
 func (v VideoMapper) TransformMsg(m consumer.Message) (msg producer.Message, uuid string, err error) {
 	tid := m.Headers["X-Request-Id"]
 	if tid == "" {
-		return producer.Message{}, "", fmt.Errorf("X-Request-Id not found in kafka message headers. Skipping message")
+		return producer.Message{}, "", fmt.Errorf("header X-Request-Id not found in kafka message headers. Skipping message")
 	}
 
 	lastModified := m.Headers["Message-Timestamp"]
@@ -79,6 +79,8 @@ func getVideoModel(videoContent map[string]interface{}, uuid string, tid string,
 	byline, _ := get("byline", videoContent)
 	firstPublishDate, _ := get("firstPublishedAt", videoContent)
 	publishedDate, _ := get("publishedAt", videoContent)
+	promotionalTitle, _ := get("promotionalTitle", videoContent)
+	promotionalStandfirst, _ := get("promotionalStandfirst", videoContent)
 
 	mainImage, err := getMainImage(videoContent)
 	if err != nil {
@@ -114,32 +116,34 @@ func getVideoModel(videoContent map[string]interface{}, uuid string, tid string,
 
 	accessLevel := getAccessLevel()
 
-	webUrl := fmt.Sprintf(webUrlTemplate, uuid)
-	canonicalWebUrl := fmt.Sprintf(canonicalWebUrlTemplate, uuid)
+	webURL := fmt.Sprintf(webUrlTemplate, uuid)
+	canonicalWebURL := fmt.Sprintf(canonicalWebUrlTemplate, uuid)
 
 	return &videoPayload{
-		Id:                 uuid,
-		Title:              title,
-		Standfirst:         standfirst,
-		Description:        description,
-		Byline:             byline,
-		Identifiers:        []identifier{i},
-		Brands:             []brand{b},
-		FirstPublishedDate: firstPublishDate,
-		PublishedDate:      publishedDate,
-		MainImage:          mainImage,
-		StoryPackage:       storyPackageUuid,
-		Transcript:         transcript,
-		Captions:           captionsList,
-		DataSources:        dataSources,
-		CanBeDistributed:   canBeDistributedYes,
-		Type:               videoType,
-		LastModified:       lastModified,
-		PublishReference:   tid,
-		CanBeSyndicated:    canBeSyndicated,
-		AccessLevel:        accessLevel,
-		WebUrl:             webUrl,
-		CanonicalWebUrl:    canonicalWebUrl,
+		ID:                    uuid,
+		Title:                 title,
+		Standfirst:            standfirst,
+		Description:           description,
+		Byline:                byline,
+		Identifiers:           []identifier{i},
+		Brands:                []brand{b},
+		FirstPublishedDate:    firstPublishDate,
+		PublishedDate:         publishedDate,
+		MainImage:             mainImage,
+		StoryPackage:          storyPackageUuid,
+		Transcript:            transcript,
+		Captions:              captionsList,
+		DataSources:           dataSources,
+		CanBeDistributed:      canBeDistributedYes,
+		Type:                  videoType,
+		LastModified:          lastModified,
+		PublishReference:      tid,
+		CanBeSyndicated:       canBeSyndicated,
+		AccessLevel:           accessLevel,
+		WebURL:                webURL,
+		CanonicalWebURL:       canonicalWebURL,
+		PromotionalTitle:      promotionalTitle,
+		PromotionalStandfirst: promotionalStandfirst,
 	}
 }
 func getCanBeSyndicated(videoContent map[string]interface{}, tid string) string {
@@ -305,10 +309,10 @@ func buildAndMarshalPublicationEvent(p *videoPayload, contentURI, lastModified, 
 	headers := map[string]string{
 		"X-Request-Id":      pubRef,
 		"Message-Timestamp": lastModified,
-		"Message-Id":        uuid.NewV4().String(),
+		"Message-ID":        uuid.NewV4().String(),
 		"Message-Type":      "cms-content-published",
 		"Content-Type":      "application/json",
-		"Origin-System-Id":  videoSystemOrigin,
+		"Origin-System-ID":  videoSystemOrigin,
 	}
 	return producer.Message{Headers: headers, Body: string(marshalledEvent)}, nil
 }
