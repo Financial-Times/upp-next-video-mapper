@@ -1,83 +1,87 @@
 {
-	"id": "a40808ac-1417-4c48-9781-1dd2d8c8c6dc",
-	"title": "ECB and Fed debates hit dollar and euro",
-	"byline": "Filmed by Nicola Stansfield. Produced by Vanessa Kortekaas.",
-	"standfirst": "Highlights of the key stories in the markets on Thursday",
-	"description": "The FT's Katie Martin highlights the main stories in the markets on Thursday, including the European Central Bank debating when to end its stimulus, and signs of pressure on the euro and the dollar.",
-	"image": "https://api.ft.com/content/77d86b7c-dfed-4a9b-a4b6-156d4afefd8c",
-	"firstPublishedAt": "2017-04-06T09:58:35.440Z",
-	"publishedAt": "2017-04-12T12:29:48.331Z",
-	"encoding": {
-		"outputs": [
-			{
-				"audioCodec": "mp3",
-				"duration": 68544,
-				"mediaType": "audio/mpeg",
-				"url": "http://ftvideo.prod.zencoder.outputs.s3.amazonaws.com/783749/0x0.mp3"
-			},
-			{
-				"audioCodec": "aac",
-				"videoCodec": "h264",
-				"duration": 68587,
-				"mediaType": "video/mp4",
-				"height": 360,
-				"width": 640,
-				"url": "http://ftvideo.prod.zencoder.outputs.s3.amazonaws.com/783749/640x360.mp4"
-			},
-			{
-				"audioCodec": "aac",
-				"videoCodec": "h264",
-				"duration": 68587,
-				"mediaType": "video/mp4",
-				"height": 720,
-				"width": 1280,
-				"url": "http://ftvideo.prod.zencoder.outputs.s3.amazonaws.com/783749/1280x720.mp4"
-			},
-			{
-				"audioCodec": "aac",
-				"videoCodec": "h264",
-				"duration": 68587,
-				"mediaType": "video/mp4",
-				"height": 1080,
-				"width": 1920,
-				"url": "http://ftvideo.prod.zencoder.outputs.s3.amazonaws.com/783749/1920x1080.mp4"
-			}
-		]
-	},
-	"transcription": {
-		"transcript": "<p>From the FT in London, here's the latest on markets. The tussle over what the European Central Bank will do next continues. Yesterday, Germany's Jens Weidmann stuck faithfully to his national stereotypes, calling for the ECB to call time on its stimulus measures now that inflation has started to recover. </p><p>Enter stage right, ECB Chief Mario Draghi, who's clearly not convinced. Speaking today, he stressed that the rising inflation has been fragile, and says he sees no reason to tweak the Central Bank's usual script. The result of this swipe at the hawks-- well, the euro has dropped further $1.06 to the dollar. The debate is, of course, global. </p><p>Overnight minutes from the latest Fed meeting showed officials are pondering how to trim its $4.5 trillion balance sheet. That's been enough to deliver a jolt of nerves to US stocks. And Republicans are openly admitting now that tax reform will be hard. This is pressure for the dollar, with US currency making losses in particular against the yen. Watch oil hit again by record US stockpiles and the Trump-Xi meeting, which raises the possibility of barbs over currency policy. </p>",
-		"captions": [
-			{
-				"format": "vtt",
-				"url": "https://next-video-editor.ft.com/783739.vtt",
-				"mediaType": "text/vtt"
-			}
-		]
-	},
-	"annotations": [
-		{
-			"id": "http://api.ft.com/things/d969d76e-f8f4-34ae-bc38-95cfd0884740",
-			"predicate": "http://www.ft.com/ontology/classification/isPrimarilyClassifiedBy"
-		},
-		{
-			"id": "http://api.ft.com/things/a54fda40-7fe7-339a-9b83-2d7b964ff3a4"
-		},
-		{
-			"id": "http://api.ft.com/things/4e8c8cc5-9ad4-3c0e-8dda-8a2b50ad13aa"
-		},
-		{
-			"id": "http://api.ft.com/things/5090aa57-9599-3651-9438-058800ac437b"
-		},
-		{
-			"id": "http://api.ft.com/things/be985196-1dc0-3da6-8a5b-dc8e8973df2f"
-		},
-		{
-			"id": "http://api.ft.com/things/0d93ba5a-15bc-361b-816e-39f76237075f",
-			"predicate": "http://www.ft.com/ontology/annotation/mentions"
-		}
-	],
-	"canBeSyndicated": true,
-	"type": "video",
-	"promotionalTitle": "promoTitleEX",
-	"promotionalStandfirst": "promotionalStandfirstEX"
+    "id": "a40808ac-1417-4c48-9781-1dd2d8c8c6dc",
+    "title": "ECB and Fed debates hit dollar and euro",
+    "byline": "Filmed by Nicola Stansfield. Produced by Vanessa Kortekaas.",
+    "standfirst": "Highlights of the key stories in the markets on Thursday",
+    "description": "The FT's Katie Martin highlights the main stories in the markets on Thursday, including the European Central Bank debating when to end its stimulus, and signs of pressure on the euro and the dollar.",
+    "image": "https://api.ft.com/content/77d86b7c-dfed-4a9b-a4b6-156d4afefd8c",
+    "firstPublishedAt": "2017-04-06T09:58:35.440Z",
+    "publishedAt": "2017-04-12T12:29:48.331Z",
+    "encoding": {
+        "outputs": [
+            {
+                "audioCodec": "mp3",
+                "duration": 68544,
+                "mediaType": "audio/mpeg",
+                "url": "http://ftvideo.prod.zencoder.outputs.s3.amazonaws.com/783749/0x0.mp3"
+            },
+            {
+                "audioCodec": "aac",
+                "videoCodec": "h264",
+                "duration": 68587,
+                "mediaType": "video/mp4",
+                "height": 360,
+                "width": 640,
+                "url": "http://ftvideo.prod.zencoder.outputs.s3.amazonaws.com/783749/640x360.mp4"
+            },
+            {
+                "audioCodec": "aac",
+                "videoCodec": "h264",
+                "duration": 68587,
+                "mediaType": "video/mp4",
+                "height": 720,
+                "width": 1280,
+                "url": "http://ftvideo.prod.zencoder.outputs.s3.amazonaws.com/783749/1280x720.mp4"
+            },
+            {
+                "audioCodec": "aac",
+                "videoCodec": "h264",
+                "duration": 68587,
+                "mediaType": "video/mp4",
+                "height": 1080,
+                "width": 1920,
+                "url": "http://ftvideo.prod.zencoder.outputs.s3.amazonaws.com/783749/1920x1080.mp4"
+            }
+        ]
+    },
+    "transcription": {
+        "transcript": "<p>From the FT in London, here's the latest on markets. The tussle over what the European Central Bank will do next continues. Yesterday, Germany's Jens Weidmann stuck faithfully to his national stereotypes, calling for the ECB to call time on its stimulus measures now that inflation has started to recover. </p><p>Enter stage right, ECB Chief Mario Draghi, who's clearly not convinced. Speaking today, he stressed that the rising inflation has been fragile, and says he sees no reason to tweak the Central Bank's usual script. The result of this swipe at the hawks-- well, the euro has dropped further $1.06 to the dollar. The debate is, of course, global. </p><p>Overnight minutes from the latest Fed meeting showed officials are pondering how to trim its $4.5 trillion balance sheet. That's been enough to deliver a jolt of nerves to US stocks. And Republicans are openly admitting now that tax reform will be hard. This is pressure for the dollar, with US currency making losses in particular against the yen. Watch oil hit again by record US stockpiles and the Trump-Xi meeting, which raises the possibility of barbs over currency policy. </p>",
+        "captions": [
+            {
+                "format": "vtt",
+                "url": "https://next-video-editor.ft.com/783739.vtt",
+                "mediaType": "text/vtt"
+            }
+        ]
+    },
+    "annotations": [
+        {
+            "id": "http://api.ft.com/things/d969d76e-f8f4-34ae-bc38-95cfd0884740",
+            "predicate": "http://www.ft.com/ontology/classification/isPrimarilyClassifiedBy"
+        },
+        {
+            "id": "http://api.ft.com/things/a54fda40-7fe7-339a-9b83-2d7b964ff3a4"
+        },
+        {
+            "id": "http://api.ft.com/things/4e8c8cc5-9ad4-3c0e-8dda-8a2b50ad13aa"
+        },
+        {
+            "id": "http://api.ft.com/things/5090aa57-9599-3651-9438-058800ac437b"
+        },
+        {
+            "id": "http://api.ft.com/things/be985196-1dc0-3da6-8a5b-dc8e8973df2f"
+        },
+        {
+            "id": "http://api.ft.com/things/0d93ba5a-15bc-361b-816e-39f76237075f",
+            "predicate": "http://www.ft.com/ontology/annotation/mentions"
+        }
+    ],
+    "canBeSyndicated": true,
+    "type": "video",
+    "alternativeTitles": {
+        "promotionalTitle": "promoTitleEX"
+    },
+    "alternativeStandfirsts": {
+        "promotionalStandfirst": "promotionalStandfirstEX"
+    }
 }

@@ -13,7 +13,7 @@ import (
 	"github.com/Financial-Times/message-queue-go-producer/producer"
 	"github.com/Financial-Times/message-queue-gonsumer/consumer"
 	uuidUtils "github.com/Financial-Times/uuid-utils-go"
-	"github.com/satori/go.uuid"
+	uuid "github.com/satori/go.uuid"
 
 	"github.com/Financial-Times/go-logger"
 )
@@ -79,8 +79,12 @@ func getVideoModel(videoContent map[string]interface{}, uuid string, tid string,
 	byline, _ := get("byline", videoContent)
 	firstPublishDate, _ := get("firstPublishedAt", videoContent)
 	publishedDate, _ := get("publishedAt", videoContent)
-	promotionalTitle, _ := get("promotionalTitle", videoContent)
-	promotionalStandfirst, _ := get("promotionalStandfirst", videoContent)
+
+	altTitles, _ := getMap("alternativeTitles", videoContent)
+	promotionalTitle, _ := get("promotionalTitle", altTitles)
+
+	altStandfirsts, _ := getMap("alternativeStandfirsts", videoContent)
+	promotionalStandfirst, _ := get("promotionalStandfirst", altStandfirsts)
 
 	mainImage, err := getMainImage(videoContent)
 	if err != nil {
@@ -120,30 +124,34 @@ func getVideoModel(videoContent map[string]interface{}, uuid string, tid string,
 	canonicalWebURL := fmt.Sprintf(canonicalWebUrlTemplate, uuid)
 
 	return &videoPayload{
-		ID:                    uuid,
-		Title:                 title,
-		Standfirst:            standfirst,
-		Description:           description,
-		Byline:                byline,
-		Identifiers:           []identifier{i},
-		Brands:                []brand{b},
-		FirstPublishedDate:    firstPublishDate,
-		PublishedDate:         publishedDate,
-		MainImage:             mainImage,
-		StoryPackage:          storyPackageUuid,
-		Transcript:            transcript,
-		Captions:              captionsList,
-		DataSources:           dataSources,
-		CanBeDistributed:      canBeDistributedYes,
-		Type:                  videoType,
-		LastModified:          lastModified,
-		PublishReference:      tid,
-		CanBeSyndicated:       canBeSyndicated,
-		AccessLevel:           accessLevel,
-		WebURL:                webURL,
-		CanonicalWebURL:       canonicalWebURL,
-		PromotionalTitle:      promotionalTitle,
-		PromotionalStandfirst: promotionalStandfirst,
+		ID:                 uuid,
+		Title:              title,
+		Standfirst:         standfirst,
+		Description:        description,
+		Byline:             byline,
+		Identifiers:        []identifier{i},
+		Brands:             []brand{b},
+		FirstPublishedDate: firstPublishDate,
+		PublishedDate:      publishedDate,
+		MainImage:          mainImage,
+		StoryPackage:       storyPackageUuid,
+		Transcript:         transcript,
+		Captions:           captionsList,
+		DataSources:        dataSources,
+		CanBeDistributed:   canBeDistributedYes,
+		Type:               videoType,
+		LastModified:       lastModified,
+		PublishReference:   tid,
+		CanBeSyndicated:    canBeSyndicated,
+		AccessLevel:        accessLevel,
+		WebURL:             webURL,
+		CanonicalWebURL:    canonicalWebURL,
+		AlternativeTitles: &alternativeTitles{
+			PromotionalTitle: promotionalTitle,
+		},
+		AlternativeStandfirst: &alternativeStandfirsts{
+			PromotionalStandfirst: promotionalStandfirst,
+		},
 	}
 }
 func getCanBeSyndicated(videoContent map[string]interface{}, tid string) string {
@@ -309,10 +317,10 @@ func buildAndMarshalPublicationEvent(p *videoPayload, contentURI, lastModified, 
 	headers := map[string]string{
 		"X-Request-Id":      pubRef,
 		"Message-Timestamp": lastModified,
-		"Message-ID":        uuid.NewV4().String(),
+		"Message-Id":        uuid.NewV4().String(),
 		"Message-Type":      "cms-content-published",
 		"Content-Type":      "application/json",
-		"Origin-System-ID":  videoSystemOrigin,
+		"Origin-System-Id":  videoSystemOrigin,
 	}
 	return producer.Message{Headers: headers, Body: string(marshalledEvent)}, nil
 }
@@ -350,6 +358,20 @@ func get(key string, videoContent map[string]interface{}) (val string, _ error) 
 		return "", fmt.Errorf("[%s] field of native video JSON is not a string", key)
 	}
 	return val, nil
+}
+
+func getMap(key string, content map[string]interface{}) (map[string]interface{}, error) {
+
+	val, ok := content[key]
+	if !ok {
+		return nil, fmt.Errorf("[%s] field of native video JSON is null", key)
+	}
+
+	retval, ok := val.(map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf("[%s] field of native video JSON is not a string", key)
+	}
+	return retval, nil
 }
 
 func getNumber(key string, inputMap map[string]interface{}) (*float64, error) {
