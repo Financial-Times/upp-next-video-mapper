@@ -2,7 +2,6 @@
 replicaCount: 2
 service:
   name: upp-next-video-mapper
-eksCluster: true
 env:
   APP_NAME: next-video-mapper
   Q_GROUP: nextVideoMapper
