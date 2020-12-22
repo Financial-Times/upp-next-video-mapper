@@ -52,21 +52,27 @@ func (v VideoMapper) TransformMsg(m consumer.Message) (msg producer.Message, uui
 		return producer.Message{}, "", fmt.Errorf("Error: %v - Video JSON couldn't be unmarshalled. Skipping invalid JSON: %v", err.Error(), m.Body)
 	}
 
+	isPublishEvent := isPublishEvent(videoContent)
+
+	//it's an unpublish event
+	if !isPublishEvent {
+		uuid, err = get("uuid", videoContent)
+		if err != nil {
+			return producer.Message{}, "", fmt.Errorf("Error: %v - Could not extract UUID from video message. Skipping invalid JSON: %v", err.Error(), m.Body)
+		}
+
+		contentURI := getPrefixedUrl(videoContentURIBase, uuid)
+		videoModel := &videoPayload{}
+		deleteVideoMsg, err := buildAndMarshalPublicationEvent(videoModel, contentURI, lastModified, tid)
+		return deleteVideoMsg, uuid, err
+	}
+
 	uuid, err = get("id", videoContent)
 	if err != nil {
 		return producer.Message{}, "", fmt.Errorf("Error: %v - Could not extract UUID from video message. Skipping invalid JSON: %v", err.Error(), m.Body)
 	}
 
 	contentURI := getPrefixedUrl(videoContentURIBase, uuid)
-	isPublishEvent := isPublishEvent(videoContent)
-
-	//it's an unpublish event
-	if !isPublishEvent {
-		videoModel := &videoPayload{}
-		deleteVideoMsg, err := buildAndMarshalPublicationEvent(videoModel, contentURI, lastModified, tid)
-		return deleteVideoMsg, uuid, err
-	}
-
 	videoModel := getVideoModel(videoContent, uuid, tid, lastModified)
 	videoMsg, err := buildAndMarshalPublicationEvent(videoModel, contentURI, lastModified, tid)
 	return videoMsg, uuid, err
