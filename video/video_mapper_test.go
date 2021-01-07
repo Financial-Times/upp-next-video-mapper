@@ -101,7 +101,7 @@ func TestTransformMsg_UnpublishEvent(t *testing.T) {
 					"lastModified": "2017-04-04T14:42:58.920Z",
 					"publishReference": "tid_123123",
 					"type": "video",
-					"id": "bad50c54-76d9-30e9-8734-b999c708aa4c"}`,
+					"uuid": "bad50c54-76d9-30e9-8734-b999c708aa4c"}`,
 	}
 
 	resultMsg, uuid, err := mapper.TransformMsg(message)
