@@ -175,12 +175,7 @@ func getCanBeSyndicated(videoContent map[string]interface{}, tid string) string 
 }
 
 func getMainImage(videoContent map[string]interface{}) (string, error) {
-	imageURI, err := get("image", videoContent)
-	if err != nil {
-		return "", err
-	}
-
-	imageUUIDString, err := getUUIDFromURI(imageURI)
+	imageUUIDString, err := get("image", videoContent)
 	if err != nil {
 		return "", err
 	}
@@ -339,14 +334,6 @@ func isPublishEvent(video map[string]interface{}) bool {
 		}
 	}
 	return true
-}
-
-func getUUIDFromURI(uri string) (string, error) {
-	result := uuidExtractRegex.FindStringSubmatch(uri)
-	if len(result) == 2 {
-		return result[1], nil
-	}
-	return "", fmt.Errorf("Couldn't extract uuid from uri %s", uri)
 }
 
 func getPrefixedUrl(prefix string, uuid string) string {
