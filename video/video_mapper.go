@@ -92,7 +92,7 @@ func getVideoModel(videoContent map[string]interface{}, uuid string, tid string,
 	altStandfirsts, _ := getMap("alternativeStandfirsts", videoContent)
 	promotionalStandfirst, _ := get("promotionalStandfirst", altStandfirsts)
 
-	mainImage, err := getMainImage(videoContent)
+	mainImage, err := getMainImage(videoContent, uuid, tid)
 	if err != nil {
 		logger.Warnf("%v - Extract main image: %v", tid, err)
 	}
@@ -174,13 +174,52 @@ func getCanBeSyndicated(videoContent map[string]interface{}, tid string) string 
 	}
 }
 
-func getMainImage(videoContent map[string]interface{}) (string, error) {
-	imageUUIDString, err := get("image", videoContent)
+func getMainImage(videoContent map[string]interface{}, videoUUID, tid string) (string, error) {
+	imageURI, err := get("image", videoContent)
 	if err != nil {
 		return "", err
 	}
 
-	return imageUUIDString, nil
+	logEntry := logger.
+		WithTransactionID(tid).
+		WithUUID(videoUUID)
+
+	imageUUIDString, err := getUUIDFromURI(imageURI)
+	if err != nil {
+		_, parsingErr := uuid.FromString(imageURI)
+		if parsingErr != nil {
+			// The provided string is neither URI nor UUID.
+			return "", err
+		}
+
+		logEntry.
+			WithField("image_set", imageURI).
+			Info("Video in new format")
+
+		return imageURI, nil
+	}
+
+	imageUUID, _ := uuidUtils.NewUUIDFromString(imageUUIDString)
+	uuidDeriver := uuidUtils.NewUUIDDeriverWith(uuidUtils.IMAGE_SET)
+	mainImageSetUUID, err := uuidDeriver.From(imageUUID)
+	if err != nil {
+		return "", err
+	}
+
+	logEntry.
+		WithField("image", imageUUIDString).
+		WithField("image_set", mainImageSetUUID.String()).
+		Info("Video in old format")
+
+	return mainImageSetUUID.String(), nil
+}
+
+func getUUIDFromURI(uri string) (string, error) {
+	result := uuidExtractRegex.FindStringSubmatch(uri)
+	if len(result) == 2 {
+		return result[1], nil
+	}
+	return "", fmt.Errorf("couldn't extract uuid from uri %s", uri)
 }
 
 func getStoryPackageUUID(videoContent map[string]interface{}, videoUUID string) (string, error) {
