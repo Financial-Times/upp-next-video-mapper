@@ -13,7 +13,7 @@ import (
 	"github.com/Financial-Times/message-queue-go-producer/producer"
 	"github.com/Financial-Times/message-queue-gonsumer/consumer"
 	uuidUtils "github.com/Financial-Times/uuid-utils-go"
-	uuid "github.com/satori/go.uuid"
+	uuid "github.com/gofrs/uuid"
 
 	"github.com/Financial-Times/go-logger"
 )
@@ -347,10 +347,16 @@ func buildAndMarshalPublicationEvent(p *videoPayload, contentURI, lastModified, 
 		return producer.Message{}, err
 	}
 
+	uuid, err := uuid.NewV4()
+	if err != nil {
+		logger.WithError(err).Warn("Failed to generate UUID")
+		return producer.Message{}, err
+	}
+
 	headers := map[string]string{
 		"X-Request-Id":      pubRef,
 		"Message-Timestamp": lastModified,
-		"Message-Id":        uuid.NewV4().String(),
+		"Message-Id":        uuid.String(),
 		"Message-Type":      "cms-content-published",
 		"Content-Type":      "application/json",
 		"Origin-System-Id":  videoSystemOrigin,
