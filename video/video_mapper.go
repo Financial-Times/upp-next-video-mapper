@@ -13,7 +13,7 @@ import (
 	"github.com/Financial-Times/message-queue-go-producer/producer"
 	"github.com/Financial-Times/message-queue-gonsumer/consumer"
 	uuidUtils "github.com/Financial-Times/uuid-utils-go"
-	uuid "github.com/satori/go.uuid"
+	uuid "github.com/google/uuid"
 
 	"github.com/Financial-Times/go-logger"
 )
@@ -186,7 +186,7 @@ func getMainImage(videoContent map[string]interface{}, videoUUID, tid string) (s
 
 	imageUUIDString, err := getUUIDFromURI(imageURI)
 	if err != nil {
-		_, parsingErr := uuid.FromString(imageURI)
+		_, parsingErr := uuid.Parse(imageURI)
 		if parsingErr != nil {
 			// The provided string is neither URI nor UUID.
 			return "", err
@@ -350,7 +350,7 @@ func buildAndMarshalPublicationEvent(p *videoPayload, contentURI, lastModified, 
 	headers := map[string]string{
 		"X-Request-Id":      pubRef,
 		"Message-Timestamp": lastModified,
-		"Message-Id":        uuid.NewV4().String(),
+		"Message-Id":        uuid.New().String(),
 		"Message-Type":      "cms-content-published",
 		"Content-Type":      "application/json",
 		"Origin-System-Id":  videoSystemOrigin,
