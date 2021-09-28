@@ -10,12 +10,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Financial-Times/go-logger"
 	"github.com/Financial-Times/message-queue-go-producer/producer"
 	"github.com/Financial-Times/message-queue-gonsumer/consumer"
 	uuidUtils "github.com/Financial-Times/uuid-utils-go"
-	uuid "github.com/google/uuid"
-
-	"github.com/Financial-Times/go-logger"
+	"github.com/google/uuid"
 )
 
 const (
@@ -92,7 +91,7 @@ func getVideoModel(videoContent map[string]interface{}, uuid string, tid string,
 	altStandfirsts, _ := getMap("alternativeStandfirsts", videoContent)
 	promotionalStandfirst, _ := get("promotionalStandfirst", altStandfirsts)
 
-	mainImage, err := getMainImage(videoContent, uuid, tid)
+	mainImage, err := getMainImage(videoContent)
 	if err != nil {
 		logger.Warnf("%v - Extract main image: %v", tid, err)
 	}
@@ -174,52 +173,17 @@ func getCanBeSyndicated(videoContent map[string]interface{}, tid string) string 
 	}
 }
 
-func getMainImage(videoContent map[string]interface{}, videoUUID, tid string) (string, error) {
-	imageURI, err := get("image", videoContent)
+func getMainImage(videoContent map[string]interface{}) (string, error) {
+	image, err := get("image", videoContent)
 	if err != nil {
 		return "", err
 	}
 
-	logEntry := logger.
-		WithTransactionID(tid).
-		WithUUID(videoUUID)
-
-	imageUUIDString, err := getUUIDFromURI(imageURI)
-	if err != nil {
-		_, parsingErr := uuid.Parse(imageURI)
-		if parsingErr != nil {
-			// The provided string is neither URI nor UUID.
-			return "", err
-		}
-
-		logEntry.
-			WithField("image_set", imageURI).
-			Info("Video in new format")
-
-		return imageURI, nil
+	if _, err = uuid.Parse(image); err != nil {
+		return "", fmt.Errorf("invalid image format: %s", image)
 	}
 
-	imageUUID, _ := uuidUtils.NewUUIDFromString(imageUUIDString)
-	uuidDeriver := uuidUtils.NewUUIDDeriverWith(uuidUtils.IMAGE_SET)
-	mainImageSetUUID, err := uuidDeriver.From(imageUUID)
-	if err != nil {
-		return "", err
-	}
-
-	logEntry.
-		WithField("image", imageUUIDString).
-		WithField("image_set", mainImageSetUUID.String()).
-		Info("Video in old format")
-
-	return mainImageSetUUID.String(), nil
-}
-
-func getUUIDFromURI(uri string) (string, error) {
-	result := uuidExtractRegex.FindStringSubmatch(uri)
-	if len(result) == 2 {
-		return result[1], nil
-	}
-	return "", fmt.Errorf("couldn't extract uuid from uri %s", uri)
+	return image, nil
 }
 
 func getStoryPackageUUID(videoContent map[string]interface{}, videoUUID string) (string, error) {
