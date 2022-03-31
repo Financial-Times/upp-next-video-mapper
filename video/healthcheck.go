@@ -1,14 +1,17 @@
 package video
 
 import (
+	"fmt"
 	"net/http"
+	"time"
 
 	fthealth "github.com/Financial-Times/go-fthealth/v1_1"
 	"github.com/Financial-Times/message-queue-go-producer/producer"
 	"github.com/Financial-Times/message-queue-gonsumer/consumer"
 	"github.com/Financial-Times/service-status-go/gtg"
-	"time"
 )
+
+const systemCode = "next-video-mapper"
 
 type HealthCheck struct {
 	consumer consumer.MessageConsumer
@@ -26,7 +29,7 @@ func (h *HealthCheck) Health() func(w http.ResponseWriter, r *http.Request) {
 	checks := []fthealth.Check{h.readQueueCheck(), h.writeQueueCheck()}
 	hc := fthealth.TimedHealthCheck{
 		HealthCheck: fthealth.HealthCheck{
-			SystemCode:  "upp-next-video-mapper",
+			SystemCode:  systemCode,
 			Name:        "Next Video Mapper",
 			Description: "Checks if all the dependent services are reachable and healthy.",
 			Checks:      checks,
@@ -43,7 +46,7 @@ func (h *HealthCheck) readQueueCheck() fthealth.Check {
 		Severity:         2,
 		BusinessImpact:   "Publishing or updating videos will not be possible, clients will not see the new content.",
 		TechnicalSummary: "Read message queue proxy is not reachable/healthy",
-		PanicGuide:       "https://dewey.ft.com/up-vm.html",
+		PanicGuide:       fmt.Sprintf("https://runbooks.ftops.tech/%s", systemCode),
 		Checker:          h.consumer.ConnectivityCheck,
 	}
 }
@@ -55,7 +58,7 @@ func (h *HealthCheck) writeQueueCheck() fthealth.Check {
 		Severity:         2,
 		BusinessImpact:   "Publishing or updating videos will not be possible, clients will not see the new content.",
 		TechnicalSummary: "Write message queue proxy is not reachable/healthy",
-		PanicGuide:       "https://dewey.ft.com/up-vm.html",
+		PanicGuide:       fmt.Sprintf("https://runbooks.ftops.tech/%s", systemCode),
 		Checker:          h.producer.ConnectivityCheck,
 	}
 }
