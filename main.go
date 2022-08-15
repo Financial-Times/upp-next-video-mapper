@@ -2,20 +2,20 @@ package main
 
 import (
 	"fmt"
-	"net"
 	"net/http"
 	"os"
 	"os/signal"
-	"sync"
+	"strconv"
 	"syscall"
 	"time"
 
-	"github.com/Financial-Times/message-queue-go-producer/producer"
-	"github.com/Financial-Times/message-queue-gonsumer/consumer"
-	"github.com/jawher/mow.cli"
+	cli "github.com/jawher/mow.cli"
 
-	"github.com/Financial-Times/go-logger"
+	"github.com/Financial-Times/go-logger/v2"
+	"github.com/Financial-Times/kafka-client-go/v3"
+	"github.com/Financial-Times/service-status-go/httphandlers"
 	"github.com/Financial-Times/upp-next-video-mapper/video"
+	"github.com/gorilla/mux"
 )
 
 const (
@@ -26,10 +26,25 @@ const (
 func main() {
 	app := cli.App(serviceName, serviceDescription)
 
-	addresses := app.Strings(cli.StringsOpt{
-		Name:   "queue-addresses",
-		Desc:   "Addresses to connect to the queue (hostnames).",
-		EnvVar: "Q_ADDR",
+	appName := app.String(cli.StringOpt{
+		Name:   "app-name",
+		Value:  "Next Video Mapper",
+		Desc:   "The name of the application",
+		EnvVar: "APP_NAME",
+	})
+
+	appSystemCode := app.String(cli.StringOpt{
+		Name:   "app-system-code",
+		Value:  "next-video-mapper",
+		Desc:   "App system code",
+		EnvVar: "APP_SYSTEM_CODE",
+	})
+
+	kafkaAddress := app.String(cli.StringOpt{
+		Name:   "queue-kafkaAddress",
+		Value:  "",
+		Desc:   "Address to connect to kafka.",
+		EnvVar: "KAFKA_ADDRESS",
 	})
 
 	group := app.String(cli.StringOpt{
@@ -40,88 +55,85 @@ func main() {
 
 	readTopic := app.String(cli.StringOpt{
 		Name:   "read-topic",
-		Desc:   "The topic to read the meassages from.",
+		Desc:   "The topic to read the messages from.",
 		EnvVar: "Q_READ_TOPIC",
-	})
-
-	readQueue := app.String(cli.StringOpt{
-		Name:   "read-queue",
-		Desc:   "The queue to read the meassages from.",
-		EnvVar: "Q_READ_QUEUE",
 	})
 
 	writeTopic := app.String(cli.StringOpt{
 		Name:   "write-topic",
-		Desc:   "The topic to write the meassages to.",
+		Desc:   "The topic to write the messages to.",
 		EnvVar: "Q_WRITE_TOPIC",
 	})
 
-	writeQueue := app.String(cli.StringOpt{
-		Name:   "write-queue",
-		Desc:   "The queue to write the meassages to.",
-		EnvVar: "Q_WRITE_QUEUE",
-	})
-
-	authorization := app.String(cli.StringOpt{
-		Name:   "authorization",
-		Desc:   "Authorization key to access the queue.",
-		EnvVar: "Q_AUTHORIZATION",
-	})
-
-	port := app.Int(cli.IntOpt{
+	appPort := app.Int(cli.IntOpt{
 		Name:   "port",
 		Value:  8080,
-		Desc:   "application port",
-		EnvVar: "PORT",
+		Desc:   "Application port to listen on",
+		EnvVar: "APP_PORT",
 	})
 
-	logger.InitDefaultLogger(serviceName)
+	logLevel := app.String(cli.StringOpt{
+		Name:   "logLevel",
+		Value:  "INFO",
+		Desc:   "Logging level (DEBUG, INFO, WARN, ERROR)",
+		EnvVar: "LOG_LEVEL",
+	})
+
+	consumerLagTolerance := app.Int(cli.IntOpt{
+		Name:   "consumerLagTolerance",
+		Value:  120,
+		Desc:   "Kafka lag tolerance",
+		EnvVar: "KAFKA_LAG_TOLERANCE",
+	})
+
+	log := logger.NewUPPLogger(serviceName, *logLevel)
+
+	log.Infof("[Startup] %s is starting", serviceName)
 
 	app.Action = func() {
 
-		if len(*addresses) == 0 {
-			logger.Error("No queue address provided. Quitting...")
-			cli.Exit(1)
+		if *kafkaAddress == "" {
+			log.Fatal("No queue kafkaAddress provided. Quitting...")
 		}
 
-		httpClient := &http.Client{
-			Transport: &http.Transport{
-				Proxy: http.ProxyFromEnvironment,
-				DialContext: (&net.Dialer{
-					Timeout:   30 * time.Second,
-					KeepAlive: 30 * time.Second,
-				}).DialContext,
-				MaxIdleConnsPerHost:   20,
-				TLSHandshakeTimeout:   3 * time.Second,
-				ExpectContinueTimeout: 1 * time.Second,
-			},
+		producerConfig := kafka.ProducerConfig{
+			BrokersConnectionString: *kafkaAddress,
+			Topic:                   *writeTopic,
+			ConnectionRetryInterval: time.Minute,
+		}
+		producer := kafka.NewProducer(producerConfig, log)
+		defer func(producer *kafka.Producer) {
+			err := producer.Close()
+			if err != nil {
+				log.WithError(err).Error("Producer could not stop")
+			}
+		}(producer)
+
+		consumerConfig := kafka.ConsumerConfig{
+			BrokersConnectionString: *kafkaAddress,
+			ConsumerGroup:           *group,
+			ConnectionRetryInterval: time.Minute,
 		}
 
-		consumerConfig := consumer.QueueConfig{
-			Addrs:                *addresses,
-			Group:                *group,
-			Topic:                *readTopic,
-			Queue:                *readQueue,
-			ConcurrentProcessing: false,
-			AutoCommitEnable:     true,
-			AuthorizationKey:     *authorization,
+		topics := []*kafka.Topic{
+			kafka.NewTopic(*readTopic, kafka.WithLagTolerance(int64(*consumerLagTolerance))),
 		}
+		videoMapper := video.NewVideoMapper(log)
+		handler := video.NewRequestHandler(producer, videoMapper, log)
+		log.Info(prettyPrintConfig(consumerConfig, producerConfig, *readTopic))
 
-		producerConfig := producer.MessageProducerConfig{
-			Addr:          (*addresses)[0],
-			Topic:         *writeTopic,
-			Queue:         *writeQueue,
-			Authorization: *authorization,
-		}
+		consumer := kafka.NewConsumer(consumerConfig, topics, log)
+		go consumer.Start(handler.OnMessage)
+		defer func(consumer *kafka.Consumer) {
+			err := consumer.Close()
+			if err != nil {
+				log.WithError(err).Error("Consumer could not stop")
+			}
+		}(consumer)
 
-		handler := video.NewVideoMapperHandler(producerConfig, httpClient)
-		messageConsumer := consumer.NewConsumer(consumerConfig, handler.OnMessage, httpClient)
-		logger.Info(prettyPrintConfig(consumerConfig, producerConfig))
-
-		hc := video.NewHealthCheck(handler.GetProducer(), messageConsumer)
-
-		go handler.Listen(hc, *port)
-		consumeUntilSigterm(messageConsumer)
+		hc := video.NewHealthCheck(producer, consumer, *appName, *appSystemCode)
+		go serveEndpoints(handler, hc, *appPort, log)
+		waitForSignal()
 	}
 
 	err := app.Run(os.Args)
@@ -130,31 +142,36 @@ func main() {
 	}
 }
 
-func consumeUntilSigterm(messageConsumer consumer.MessageConsumer) {
-	logger.Infof("Starting queue consumer: %#v", messageConsumer)
-	var consumerWaitGroup sync.WaitGroup
-	consumerWaitGroup.Add(1)
+func serveEndpoints(serviceHandler *video.VideoMapperHandler, hc *video.HealthCheck, port int, log *logger.UPPLogger) {
+	r := mux.NewRouter()
+	r.HandleFunc("/map", serviceHandler.MapRequest).Methods("POST")
+	r.HandleFunc("/__health", hc.Health())
+	r.HandleFunc(httphandlers.BuildInfoPath, httphandlers.BuildInfoHandler)
+	r.HandleFunc(httphandlers.PingPath, httphandlers.PingHandler)
+	r.HandleFunc(httphandlers.GTGPath, httphandlers.NewGoodToGoHandler(hc.GTG))
 
-	go func() {
-		messageConsumer.Start()
-		consumerWaitGroup.Done()
-	}()
+	http.Handle("/", r)
+	log.Infof("Starting to listen on port [%d]", port)
+	err := http.ListenAndServe(":"+strconv.Itoa(port), nil)
+	if err != nil {
+		log.Panicf("Couldn't set up HTTP listener: %+v\n", err)
+	}
+}
 
+func waitForSignal() {
 	ch := make(chan os.Signal)
 	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
 	<-ch
-	messageConsumer.Stop()
-	consumerWaitGroup.Wait()
 }
 
-func prettyPrintConfig(c consumer.QueueConfig, p producer.MessageProducerConfig) string {
-	return fmt.Sprintf("Config: [\n\t%s\n\t%s\n]", prettyPrintConsumerConfig(c), prettyPrintProducerConfig(p))
+func prettyPrintConfig(c kafka.ConsumerConfig, p kafka.ProducerConfig, readTopic string) string {
+	return fmt.Sprintf("Config: [\n\t%s\n\t%s\n]", prettyPrintConsumerConfig(c, readTopic), prettyPrintProducerConfig(p))
 }
 
-func prettyPrintConsumerConfig(c consumer.QueueConfig) string {
-	return fmt.Sprintf("consumerConfig: [\n\t\taddr: [%v]\n\t\tgroup: [%v]\n\t\ttopic: [%v]\n\t\treadQueueHeader: [%v]\n\t]", c.Addrs, c.Group, c.Topic, c.Queue)
+func prettyPrintConsumerConfig(c kafka.ConsumerConfig, readTopic string) string {
+	return fmt.Sprintf("consumerConfig: [\n\t\taddr: [%v]\n\t\tgroup: [%v]\n\t\ttopic: [%v]\n\t\t]", c.BrokersConnectionString, c.ConsumerGroup, readTopic)
 }
 
-func prettyPrintProducerConfig(p producer.MessageProducerConfig) string {
-	return fmt.Sprintf("producerConfig: [\n\t\taddr: [%v]\n\t\ttopic: [%v]\n\t\twriteQueueHeader: [%v]\n\t]", p.Addr, p.Topic, p.Queue)
+func prettyPrintProducerConfig(p kafka.ProducerConfig) string {
+	return fmt.Sprintf("producerConfig: [\n\t\taddr: [%v]\n\t\ttopic: [%v]\n\t\t]", p.BrokersConnectionString, p.Topic)
 }

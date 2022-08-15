@@ -3,7 +3,11 @@ replicaCount: 2
 service:
   name: upp-next-video-mapper
 env:
-  APP_NAME: next-video-mapper
-  Q_GROUP: nextVideoMapper
+  APP_NAME: "Next Video Mapper"
+  APP_SYSTEM_CODE: next-video-mapper
+  APP_PORT: 8080
+  Q_GROUP: upp-next-video-mapper
   Q_READ_TOPIC: NativeCmsPublicationEvents
   Q_WRITE_TOPIC: CmsPublicationEvents
+  KAFKA_LAG_TOLERANCE: 120
+  LOG_LEVEL: "INFO"
