@@ -19,14 +19,13 @@ go build -mod=readonly .
 ## Running Locally
 
 ```
-export Q_ADDR="http://172.23.53.64:8080" ## you'll have to change the address to your queue
-export Q_GROUP=nextVideoMapper
+export KAFKA_ADDRESS="localhost:2181" ## you'll have to change the address to your queue
+export KAFKA_LAG_TOLERANCE=120
+export Q_GROUP=upp-next-video-mapper
 export Q_READ_TOPIC=NativeCmsPublicationEvents
-export Q_READ_QUEUE=kafka
 export Q_WRITE_TOPIC=CmsPublicationEvents
-export Q_WRITE_QUEUE=kafka
 export Q_AUTHORIZATION=$(etcdctl get /ft/_credentials/kafka-bridge/authorization_key) ## this is not exact, you'll have to get it from the cluster's etcd
-export PORT=... ## 8080 by default, only necessary when you need a custom port for running locally 
+export APP_PORT=... ## 8080 by default, only necessary when you need a custom port for running locally 
 go build .
 ./upp-next-video-mapper
 ```

@@ -2,11 +2,10 @@ package video
 
 import (
 	"encoding/json"
-	"fmt"
-	"io/ioutil"
 	"testing"
 
-	"github.com/Financial-Times/message-queue-gonsumer/consumer"
+	"github.com/Financial-Times/go-logger/v2"
+	"github.com/Financial-Times/kafka-client-go/v3"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -15,24 +14,10 @@ const (
 	xRequestId       = "tid_123123"
 )
 
-var mapper = VideoMapper{}
-
-func mapStringToPublicationEvent(videoOutput, retMsgBody string) (videoOutputStruct, resultMsgStruct *publicationEvent, err error) {
-
-	videoOutputStruct = &publicationEvent{}
-	resultMsgStruct = &publicationEvent{}
-	if err := json.Unmarshal([]byte(videoOutput), videoOutputStruct); err != nil {
-		return nil, nil, err
-	}
-
-	if err := json.Unmarshal([]byte(retMsgBody), resultMsgStruct); err != nil {
-		return nil, nil, err
-	}
-	return videoOutputStruct, resultMsgStruct, nil
-}
+var mapper = VideoMapper{log: logger.NewUPPLogger("video-mapper", "Debug")}
 
 func TestTransformMsg_TidHeaderMissing(t *testing.T) {
-	var message = consumer.Message{
+	var message = kafka.FTMessage{
 		Headers: map[string]string{
 			"Message-Timestamp": messageTimestamp,
 		},
@@ -44,7 +29,7 @@ func TestTransformMsg_TidHeaderMissing(t *testing.T) {
 }
 
 func TestTransformMsg_MessageTimestampHeaderMissing(t *testing.T) {
-	var message = consumer.Message{
+	var message = kafka.FTMessage{
 		Headers: map[string]string{
 			"X-Request-Id": xRequestId,
 		},
@@ -60,7 +45,7 @@ func TestTransformMsg_MessageTimestampHeaderMissing(t *testing.T) {
 }
 
 func TestTransformMsg_InvalidJson(t *testing.T) {
-	var message = consumer.Message{
+	var message = kafka.FTMessage{
 		Headers: map[string]string{
 			"X-Request-Id":      xRequestId,
 			"Message-Timestamp": messageTimestamp,
@@ -78,7 +63,7 @@ func TestTransformMsg_InvalidJson(t *testing.T) {
 }
 
 func TestTransformMsg_UuidMissing(t *testing.T) {
-	var message = consumer.Message{
+	var message = kafka.FTMessage{
 		Headers: map[string]string{
 			"X-Request-Id": xRequestId,
 		},
@@ -91,7 +76,7 @@ func TestTransformMsg_UuidMissing(t *testing.T) {
 }
 
 func TestTransformMsg_UnpublishEvent(t *testing.T) {
-	var message = consumer.Message{
+	var message = kafka.FTMessage{
 		Headers: map[string]string{
 			"X-Request-Id":      xRequestId,
 			"Message-Timestamp": messageTimestamp,
@@ -120,7 +105,7 @@ func TestTransformMsg_Success(t *testing.T) {
 		assert.FailNow(t, err.Error(), "Output data for test cannot be loaded from external file")
 	}
 
-	var message = consumer.Message{
+	var message = kafka.FTMessage{
 		Headers: map[string]string{
 			"X-Request-Id":      xRequestId,
 			"Message-Timestamp": messageTimestamp,
@@ -131,14 +116,14 @@ func TestTransformMsg_Success(t *testing.T) {
 	resultMsg, _, err := mapper.TransformMsg(message)
 	assert.NoError(t, err, "Error not expected for publish event")
 
-	videoOutputStruct, resultMsgStruct, err := mapStringToPublicationEvent(videoOutput, resultMsg.Body)
+	videoOutputStruct, resultMsgStruct, err := MapStringToPublicationEvent(videoOutput, resultMsg.Body)
 	if assert.NoError(t, err, "Error mapping string") {
 		assert.Equal(t, videoOutputStruct, resultMsgStruct)
 	}
 }
 
 func TestTransformMsg_WithStoryPackage(t *testing.T) {
-	var message = consumer.Message{
+	var message = kafka.FTMessage{
 		Headers: map[string]string{
 			"X-Request-Id":      xRequestId,
 			"Message-Timestamp": messageTimestamp,
@@ -163,11 +148,15 @@ func TestTransformMsg_WithStoryPackage(t *testing.T) {
 	assert.Contains(t, resultMsg.Body, "\"storyPackage\":\"a40808ac-1417-4c48-2945-63c109d95533\"")
 }
 
-func readContent(fileName string) (string, error) {
-	data, err := ioutil.ReadFile("test-resources/" + fileName)
-	if err != nil {
-		return "", err
+func MapStringToPublicationEvent(videoOutput, retMsgBody string) (videoOutputStruct, resultMsgStruct *publicationEvent, err error) {
+	videoOutputStruct = &publicationEvent{}
+	resultMsgStruct = &publicationEvent{}
+	if err := json.Unmarshal([]byte(videoOutput), videoOutputStruct); err != nil {
+		return nil, nil, err
 	}
 
-	return fmt.Sprintf("%s", data), nil
+	if err := json.Unmarshal([]byte(retMsgBody), resultMsgStruct); err != nil {
+		return nil, nil, err
+	}
+	return videoOutputStruct, resultMsgStruct, nil
 }

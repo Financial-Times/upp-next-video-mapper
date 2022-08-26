@@ -16,6 +16,10 @@ resources:
     memory: 256Mi
 env:
   APP_NAME: ""
+  APP_SYSTEM_CODE: ""
+  APP_PORT: ""
   Q_GROUP: ""
   Q_READ_TOPIC: ""
   Q_WRITE_TOPIC: ""
+  KAFKA_LAG_TOLERANCE: ""
+  LOG_LEVEL: ""

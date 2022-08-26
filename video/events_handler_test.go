@@ -1,13 +1,15 @@
 package video
 
 import (
-	"github.com/Financial-Times/message-queue-go-producer/producer"
-	"github.com/Financial-Times/message-queue-gonsumer/consumer"
-	"github.com/gorilla/mux"
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
+
+	"github.com/Financial-Times/go-logger/v2"
+	"github.com/Financial-Times/kafka-client-go/v3"
+	"github.com/gorilla/mux"
+	"github.com/stretchr/testify/assert"
 )
 
 type mockMessageProducer struct {
@@ -16,19 +18,13 @@ type mockMessageProducer struct {
 }
 
 func TestNewVideoMapperHandler(t *testing.T) {
-	s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-	}))
-
-	cfg := producer.MessageProducerConfig{
-		Addr:          "localhost:3000",
-		Topic:         "writeTopic",
-		Queue:         "writeQueue",
-		Authorization: "authorization",
-	}
-
-	handler := NewVideoMapperHandler(cfg, s.Client())
+	log := logger.NewUPPLogger("next-video-mapper", "Debug")
+	handler := NewRequestHandler(&mockMessageProducer{
+		message:    "Test",
+		sendCalled: false,
+	}, VideoMapper{log: log}, log)
 	assert.NotNil(t, handler.messageProducer, "Message producer should be set")
-	assert.NotNil(t, handler.videoMapper, "Video mapper should be set")
+	assert.NotNil(t, handler.messageTransformer, "Message transformer should be set")
 }
 
 func TestMapHandler_InvalidBody(t *testing.T) {
@@ -39,30 +35,30 @@ func TestMapHandler_InvalidBody(t *testing.T) {
 
 	res := httptest.NewRecorder()
 
-	eventsHandler, _ := createEventsHandler()
+	requestHandler, _ := createRequestHandler()
 
 	r := mux.NewRouter()
-	r.HandleFunc("/map", eventsHandler.MapHandler).Methods("POST")
+	r.HandleFunc("/map", requestHandler.MapRequest).Methods("POST")
 	r.ServeHTTP(res, req)
 
 	assert.Equal(t, http.StatusBadRequest, res.Code, "Unexpected status code")
 }
 
 func TestOnMessage_InvalidSystemId(t *testing.T) {
-	m := consumer.Message{
+	m := kafka.FTMessage{
 		Headers: map[string]string{
 			"Origin-System-Id": "hasfsafaf",
 		},
 		Body: `{}`,
 	}
 
-	eventsHandler, mockMsgProducer := createEventsHandler()
+	eventsHandler, mockMsgProducer := createRequestHandler()
 	eventsHandler.OnMessage(m)
 	assert.Equal(t, false, mockMsgProducer.sendCalled, "Producer message not expected to be generated when invalid Origin Id")
 }
 
 func TestOnMessage_SkipAudioContent(t *testing.T) {
-	m := consumer.Message{
+	m := kafka.FTMessage{
 		Headers: map[string]string{
 			"Origin-System-Id": "http://cmdb.ft.com/systems/next-video-editor",
 			"Content-Type":     "application/vnd.ft-upp-audio+json",
@@ -70,22 +66,22 @@ func TestOnMessage_SkipAudioContent(t *testing.T) {
 		Body: `{}`,
 	}
 
-	eventsHandler, mockMsgProducer := createEventsHandler()
+	eventsHandler, mockMsgProducer := createRequestHandler()
 	eventsHandler.OnMessage(m)
 	assert.Equal(t, false, mockMsgProducer.sendCalled, "Producer message not expected to be generated when invalid Origin Id")
 }
 
 func TestOnMessage_MappingError(t *testing.T) {
-	m := consumer.Message{
+	m := kafka.FTMessage{
 		Headers: map[string]string{
 			"X-Request-Id":      xRequestId,
-			"Origin-System-Id":  videoSystemOrigin,
+			"Origin-System-Id":  systemOrigin,
 			"Message-Timestamp": messageTimestamp,
 		},
 		Body: `{}`,
 	}
 
-	eventsHandler, mockMsgProducer := createEventsHandler()
+	eventsHandler, mockMsgProducer := createRequestHandler()
 	eventsHandler.OnMessage(m)
 
 	assert.Equal(t, false, mockMsgProducer.sendCalled, "Error expected when mapping fails")
@@ -97,17 +93,17 @@ func TestOnMessage_Success(t *testing.T) {
 		assert.FailNow(t, err.Error(), "Input data for test cannot be loaded from external file")
 	}
 
-	m := consumer.Message{
+	m := kafka.FTMessage{
 		Headers: map[string]string{
 			"X-Request-Id":      xRequestId,
-			"Origin-System-Id":  videoSystemOrigin,
+			"Origin-System-Id":  systemOrigin,
 			"Message-Timestamp": messageTimestamp,
 			"Content-Type":      "application/json",
 		},
 		Body: videoInput,
 	}
 
-	eventsHandler, mockMsgProducer := createEventsHandler()
+	eventsHandler, mockMsgProducer := createRequestHandler()
 	eventsHandler.OnMessage(m)
 	assert.Exactly(t, true, mockMsgProducer.sendCalled, "Mapped video content should be produced")
 
@@ -116,13 +112,13 @@ func TestOnMessage_Success(t *testing.T) {
 		assert.FailNow(t, err.Error(), "Output data for test cannot be loaded from external file")
 	}
 
-	videoOutputStruct, resultMsgStruct, err := mapStringToPublicationEvent(videoOutput, mockMsgProducer.message)
+	videoOutputStruct, resultMsgStruct, err := MapStringToPublicationEvent(videoOutput, mockMsgProducer.message)
 	if assert.NoError(t, err, "Error mapping string") {
 		assert.Equal(t, videoOutputStruct, resultMsgStruct)
 	}
 }
 
-func (mock *mockMessageProducer) SendMessage(uuid string, message producer.Message) error {
+func (mock *mockMessageProducer) SendMessage(message kafka.FTMessage) error {
 	mock.message = message.Body
 	mock.sendCalled = true
 	return nil
@@ -133,12 +129,19 @@ func (mock *mockMessageProducer) ConnectivityCheck() (string, error) {
 	return "", nil
 }
 
-func createEventsHandler() (*VideoMapperHandler, *mockMessageProducer) {
-	var msgProducer producer.MessageProducer
-	var mockMsgProducer mockMessageProducer
+func createRequestHandler() (*VideoMapperHandler, *mockMessageProducer) {
+	mockMsgProducer := mockMessageProducer{}
+	msgProducer := &mockMsgProducer
+	log := logger.NewUPPLogger("video-mapper", "Debug")
 
-	mockMsgProducer = mockMessageProducer{}
-	msgProducer = &mockMsgProducer
+	return NewRequestHandler(msgProducer, VideoMapper{log: log}, log), &mockMsgProducer
+}
 
-	return &VideoMapperHandler{msgProducer, VideoMapper{}}, &mockMsgProducer
+func readContent(fileName string) (string, error) {
+	data, err := os.ReadFile("test-resources/" + fileName)
+	if err != nil {
+		return "", err
+	}
+
+	return string(data), nil
 }

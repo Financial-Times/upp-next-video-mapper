@@ -1,5 +1,7 @@
 package video
 
+const systemOrigin = "http://cmdb.ft.com/systems/next-video-editor"
+
 type publicationEvent struct {
 	ContentURI   string        `json:"contentUri"`
 	Payload      *videoPayload `json:"payload"`
