@@ -92,7 +92,7 @@ func TestTransformMsg_UnpublishEvent(t *testing.T) {
 	resultMsg, uuid, err := mapper.TransformMsg(message)
 	assert.NoError(t, err, "Error not expected for unpublish event")
 	assert.Equal(t, "bad50c54-76d9-30e9-8734-b999c708aa4c", uuid, "UUID not extracted correctly from unpublish event")
-	assert.Equal(t, "{\"contentUri\":\"http://next-video-mapper.svc.ft.com/video/model/bad50c54-76d9-30e9-8734-b999c708aa4c\",\"payload\":{},\"lastModified\":\"2017-04-13T10:27:32.353Z\"}", resultMsg.Body)
+	assert.Equal(t, "{\"contentUri\":\"http://next-video-mapper.svc.ft.com/video/model/bad50c54-76d9-30e9-8734-b999c708aa4c\",\"payload\":{\"uuid\":\"bad50c54-76d9-30e9-8734-b999c708aa4c\",\"deleted\":true},\"lastModified\":\"2017-04-13T10:27:32.353Z\"}", resultMsg.Body)
 }
 
 func TestTransformMsg_Success(t *testing.T) {

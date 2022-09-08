@@ -65,7 +65,12 @@ func (v VideoMapper) TransformMsg(m kafka.FTMessage) (kafka.FTMessage, string, e
 		}
 
 		contentURI := utils.GetPrefixedURL(videoContentURIBase, uuid)
-		videoModel := &videoPayload{}
+
+		videoModel := &videoPayload{
+			ID:      uuid,
+			Deleted: true,
+		}
+
 		deleteVideoMsg, err := v.buildAndMarshalPublicationEvent(videoModel, contentURI, lastModified, tid)
 		return deleteVideoMsg, uuid, err
 	}

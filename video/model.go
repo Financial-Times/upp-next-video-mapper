@@ -50,6 +50,7 @@ type videoPayload struct {
 	CanonicalWebURL       string                  `json:"canonicalWebUrl,omitempty"`
 	AlternativeTitles     *alternativeTitles      `json:"alternativeTitles,omitempty"`
 	AlternativeStandfirst *alternativeStandfirsts `json:"alternativeStandfirsts,omitempty"`
+	Deleted               bool                    `json:"deleted,omitempty"`
 }
 
 type caption struct {
