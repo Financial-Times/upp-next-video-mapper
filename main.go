@@ -7,12 +7,11 @@ import (
 	"os/signal"
 	"strconv"
 	"syscall"
-	"time"
 
+	"github.com/Financial-Times/kafka-client-go/v4"
 	cli "github.com/jawher/mow.cli"
 
 	"github.com/Financial-Times/go-logger/v2"
-	"github.com/Financial-Times/kafka-client-go/v3"
 	"github.com/Financial-Times/service-status-go/httphandlers"
 	"github.com/Financial-Times/upp-next-video-mapper/video"
 	"github.com/gorilla/mux"
@@ -86,6 +85,12 @@ func main() {
 		EnvVar: "KAFKA_LAG_TOLERANCE",
 	})
 
+	clusterArn := app.String(cli.StringOpt{
+		Name:   "kafka-cluster-arn",
+		Desc:   "Amazon Resource Name for the kafka cluster",
+		EnvVar: "KAFKA_CLUSTER_ARN",
+	})
+
 	log := logger.NewUPPLogger(serviceName, *logLevel)
 
 	log.Infof("[Startup] %s is starting", serviceName)
@@ -97,11 +102,11 @@ func main() {
 		}
 
 		producerConfig := kafka.ProducerConfig{
+			ClusterArn:              clusterArn,
 			BrokersConnectionString: *kafkaAddress,
 			Topic:                   *writeTopic,
-			ConnectionRetryInterval: time.Minute,
 		}
-		producer := kafka.NewProducer(producerConfig, log)
+		producer, err := kafka.NewProducer(producerConfig)
 		defer func(producer *kafka.Producer) {
 			err := producer.Close()
 			if err != nil {
@@ -109,10 +114,14 @@ func main() {
 			}
 		}(producer)
 
+		if err != nil {
+			log.WithError(err).Fatal("Failed to create Kafka producer")
+		}
+
 		consumerConfig := kafka.ConsumerConfig{
+			ClusterArn:              clusterArn,
 			BrokersConnectionString: *kafkaAddress,
 			ConsumerGroup:           *group,
-			ConnectionRetryInterval: time.Minute,
 		}
 
 		topics := []*kafka.Topic{
@@ -122,10 +131,15 @@ func main() {
 		handler := video.NewRequestHandler(producer, videoMapper, log)
 		log.Info(prettyPrintConfig(consumerConfig, producerConfig, *readTopic))
 
-		consumer := kafka.NewConsumer(consumerConfig, topics, log)
+		consumer, err := kafka.NewConsumer(consumerConfig, topics, log)
+
+		if err != nil {
+			log.WithError(err).Fatal("Failed to create Kafka consumer")
+		}
+
 		go consumer.Start(handler.OnMessage)
 		defer func(consumer *kafka.Consumer) {
-			err := consumer.Close()
+			err = consumer.Close()
 			if err != nil {
 				log.WithError(err).Error("Consumer could not stop")
 			}
