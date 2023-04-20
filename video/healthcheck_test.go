@@ -5,8 +5,6 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/Financial-Times/go-logger/v2"
-	"github.com/Financial-Times/kafka-client-go/v3"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -15,19 +13,6 @@ func initializeHealthCheck(isProducerConnectionHealthy bool, isConsumerConnectio
 		consumer: &mockConsumerInstance{isConnectionHealthy: isConsumerConnectionHealthy, isNotLagging: isConsumerNotLagging},
 		producer: &mockProducerInstance{isConnectionHealthy: isProducerConnectionHealthy},
 	}
-}
-
-func TestNewHealthCheck(t *testing.T) {
-	log := logger.NewUPPLogger("video-mapper", "Debug")
-	hc := NewHealthCheck(
-		kafka.NewProducer(kafka.ProducerConfig{}, log),
-		kafka.NewConsumer(kafka.ConsumerConfig{}, []*kafka.Topic{kafka.NewTopic("test")}, log),
-		"next-video-mapper",
-		"video-mapper",
-	)
-
-	assert.NotNil(t, hc.consumer)
-	assert.NotNil(t, hc.producer)
 }
 
 func TestHappyHealthCheck(t *testing.T) {

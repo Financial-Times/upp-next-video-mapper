@@ -2,6 +2,7 @@
 replicaCount: 1
 service:
   name: upp-next-video-mapper
+  serviceAccountName: eksctl-next-video-mapper-serviceaccount
 env:
   APP_NAME: "Next Video Mapper"
   APP_SYSTEM_CODE: next-video-mapper

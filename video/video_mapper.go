@@ -8,7 +8,7 @@ import (
 	"regexp"
 
 	"github.com/Financial-Times/go-logger/v2"
-	"github.com/Financial-Times/kafka-client-go/v3"
+	"github.com/Financial-Times/kafka-client-go/v4"
 	"github.com/Financial-Times/upp-next-video-mapper/utils"
 	uuidUtils "github.com/Financial-Times/uuid-utils-go"
 	"github.com/google/uuid"
